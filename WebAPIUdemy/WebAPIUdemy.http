@@ -1,0 +1,6 @@
+@WebAPIUdemy_HostAddress = http://localhost:5122
+
+GET {{WebAPIUdemy_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
