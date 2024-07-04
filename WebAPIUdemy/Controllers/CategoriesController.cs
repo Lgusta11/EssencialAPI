@@ -21,29 +21,46 @@ namespace WebAPIUdemy.Controllers
         [HttpGet("produtos")]
         public ActionResult<IEnumerable<Category>> GetCategoriasProdutos()
         {
-          return _context!.Categories.Include(p=> p.Products).ToList();
+          return _context!.Categories.Include(p=> p.Products).Where(c=> c.CategoryId <= 5).ToList();
         }
 
         [HttpGet]
         public ActionResult<IEnumerable<Category>> Get()
         {
-            var category = _context!.Categories.ToList();
-            if (category is null)
+            try
             {
-                return NotFound("Nenhuma categoria cadastrada!");
+                var category = _context!.Categories.AsNoTracking().ToList();
+                if (category is null)
+                {
+                    return NotFound("Nenhuma categoria cadastrada!");
+                }
+                return Ok(category);
             }
-            return Ok(category);
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Ocorreu umproblema ao tratar a sua solicitação.");
+            }
         }
 
         [HttpGet("{id:int}", Name = "ObterCategoria")]
         public ActionResult<Category> Get(int id) 
         {
-            var category = _context!.Products.FirstOrDefault(p => p.CategoryId == id);
-            if (category is null)
+            try
             {
-                return NotFound("Categoria não encontrada");
+                var category = _context!.Products.AsNoTracking().FirstOrDefault(p => p.CategoryId == id);
+                if (category is null)
+                {
+                    return NotFound($"Categoria com id={id} não encontrada");
+                }
+                return Ok(category);
             }
-            return Ok(category);
+            catch (Exception)
+            {
+
+                return StatusCode(StatusCodes.Status500InternalServerError, "Ocorreu umproblema ao tratar a sua solicitação.");
+            }
+
+
         }
 
         [HttpPost]
