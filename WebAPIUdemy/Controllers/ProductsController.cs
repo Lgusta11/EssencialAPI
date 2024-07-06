@@ -17,9 +17,9 @@ namespace WebAPIUdemy.Controllers
         }
 
         [HttpGet]
-        public ActionResult<IEnumerable<Product>> Get() 
+        public async Task<ActionResult<IEnumerable<Product>>> Get() 
         {
-            var products = _context!.Products.AsNoTracking().ToList();
+            var products = await _context!.Products.AsNoTracking().ToListAsync();
             if (products is null)
             {
                 return NotFound("Produto não encontrado");  
@@ -27,10 +27,10 @@ namespace WebAPIUdemy.Controllers
             return Ok(products);
         }
 
-        [HttpGet("{id:int}", Name ="ObterProduto")]
-        public ActionResult<Product> Get(int id) 
+        [HttpGet("{id:int:min(1)}", Name ="ObterProduto")]
+        public async Task<ActionResult<Product>> Get(int id) 
         {
-            var products = _context!.Products.AsNoTracking().FirstOrDefault(p => p.ProductId == id);
+            var products = await _context!.Products.AsNoTracking().FirstOrDefaultAsync(p => p.ProductId == id);
             if (products is null)
             {
                 return NotFound("Produto não encontrado");
@@ -46,14 +46,13 @@ namespace WebAPIUdemy.Controllers
                 return BadRequest();
             }
 
-
            _context!.Products.Add(product);
            _context.SaveChanges();
 
            return new CreatedAtRouteResult("ObterProduto", new { id = product.ProductId} , product);            
         }
 
-        [HttpPut("{id:int}")]
+        [HttpPut("{id:int:min(1)}")]
         public ActionResult Put(Product product, int id)
         {
             if(id != product.ProductId)
@@ -67,7 +66,7 @@ namespace WebAPIUdemy.Controllers
             return Ok(product);
         }
 
-        [HttpDelete("{id:int}")]
+        [HttpDelete("{id:int:min(1)}")]
         public ActionResult Delete(int id) 
         {
             var product = _context!.Products.FirstOrDefault(p => p.ProductId == id);

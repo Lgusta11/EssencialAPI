@@ -19,17 +19,17 @@ namespace WebAPIUdemy.Controllers
 
 
         [HttpGet("produtos")]
-        public ActionResult<IEnumerable<Category>> GetCategoriasProdutos()
+        public async Task<ActionResult<IEnumerable<Category>>> GetCategoriasProdutos()
         {
-          return _context!.Categories.Include(p=> p.Products).Where(c=> c.CategoryId <= 5).ToList();
+             return await _context!.Categories.Include(p=> p.Products).Where(c=> c.CategoryId <= 5).ToListAsync();
         }
 
         [HttpGet]
-        public ActionResult<IEnumerable<Category>> Get()
+        public async Task<ActionResult<IEnumerable<Category>>> Get()
         {
             try
             {
-                var category = _context!.Categories.AsNoTracking().ToList();
+                var category = await _context!.Categories.AsNoTracking().ToListAsync();
                 if (category is null)
                 {
                     return NotFound("Nenhuma categoria cadastrada!");
@@ -42,12 +42,12 @@ namespace WebAPIUdemy.Controllers
             }
         }
 
-        [HttpGet("{id:int}", Name = "ObterCategoria")]
-        public ActionResult<Category> Get(int id) 
+        [HttpGet("{id:int:min(1}", Name = "ObterCategoria")]
+        public async Task<ActionResult<Category>> Get(int id) 
         {
             try
             {
-                var category = _context!.Products.AsNoTracking().FirstOrDefault(p => p.CategoryId == id);
+                var category = await _context!.Products.AsNoTracking().FirstOrDefaultAsync(p => p.CategoryId == id);
                 if (category is null)
                 {
                     return NotFound($"Categoria com id={id} não encontrada");
@@ -77,7 +77,7 @@ namespace WebAPIUdemy.Controllers
                 new { id = category.CategoryId }, category);
         }
 
-        [HttpPut("{id:int}")]
+        [HttpPut("{id:int:min(1)}")]
         public ActionResult Put(Category category, int id)
         {
             if (id != category.CategoryId)
@@ -91,7 +91,7 @@ namespace WebAPIUdemy.Controllers
             return Ok(category);
         }
 
-        [HttpDelete("{id:int}")]
+        [HttpDelete("{id:int:min(1)}")]
         public ActionResult Delete(int id)
         {
             var category = _context!.Categories.FirstOrDefault(p => p.CategoryId == id);
