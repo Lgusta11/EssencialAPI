@@ -10,6 +10,7 @@ public class Category
     {
         Products = new Collection<Product>();
     }
+    [Key]
     public int CategoryId { get; set; }
     [Required]
     [StringLength(80)]

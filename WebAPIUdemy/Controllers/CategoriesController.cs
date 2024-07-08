@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebAPIUdemy.Context;
 using WebAPIUdemy.Model;
@@ -17,7 +16,7 @@ namespace WebAPIUdemy.Controllers
             _context = context;
         }
 
-
+       
         [HttpGet("produtos")]
         public async Task<ActionResult<IEnumerable<Category>>> GetCategoriasProdutos()
         {
@@ -42,12 +41,12 @@ namespace WebAPIUdemy.Controllers
             }
         }
 
-        [HttpGet("{id:int:min(1}", Name = "ObterCategoria")]
-        public async Task<ActionResult<Category>> Get(int id) 
+        [HttpGet("{id:int:min(1)}", Name = "ObterCategoria")]
+        public async Task<ActionResult<Category>> Get(int id)
         {
             try
             {
-                var category = await _context!.Products.AsNoTracking().FirstOrDefaultAsync(p => p.CategoryId == id);
+                var category = await _context!.Categories.AsNoTracking().FirstOrDefaultAsync(c => c.CategoryId == id);
                 if (category is null)
                 {
                     return NotFound($"Categoria com id={id} não encontrada");
@@ -56,14 +55,15 @@ namespace WebAPIUdemy.Controllers
             }
             catch (Exception)
             {
-
-                return StatusCode(StatusCodes.Status500InternalServerError, "Ocorreu umproblema ao tratar a sua solicitação.");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Ocorreu um problema ao tratar a sua solicitação.");
             }
-
-
         }
 
-        [HttpPost]
+
+
+    
+
+    [HttpPost]
         public ActionResult Post(Category category)
         {
             if (category is null)
@@ -94,7 +94,7 @@ namespace WebAPIUdemy.Controllers
         [HttpDelete("{id:int:min(1)}")]
         public ActionResult Delete(int id)
         {
-            var category = _context!.Categories.FirstOrDefault(p => p.CategoryId == id);
+            var category = _context!.Categories.FirstOrDefault(c => c.CategoryId == id);
 
             if (category is null)
             {

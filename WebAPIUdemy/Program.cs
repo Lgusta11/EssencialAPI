@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using System.Text.Json.Serialization;
 using WebAPIUdemy.Context;
 
@@ -15,7 +14,8 @@ builder.Services.AddSwaggerGen();
 string mysqlConnection = builder.Configuration.GetConnectionString("DefaultConnection")!;
 
 builder.Services.AddDbContext<CatalogoContext>(options =>
-options.UseMySql(mysqlConnection, ServerVersion.AutoDetect(mysqlConnection)));
+    options.UseMySql(mysqlConnection, ServerVersion.AutoDetect(mysqlConnection))
+);
 
 var app = builder.Build();
 

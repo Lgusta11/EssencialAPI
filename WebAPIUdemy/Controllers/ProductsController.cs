@@ -27,8 +27,8 @@ namespace WebAPIUdemy.Controllers
             return Ok(products);
         }
 
-        [HttpGet("{id:int:min(1)}", Name ="ObterProduto")]
-        public async Task<ActionResult<Product>> Get(int id) 
+        [HttpGet("{id:int:min(1)}", Name = "ObterProduto")]
+        public async Task<ActionResult<Product>> Get(int id)
         {
             var products = await _context!.Products.AsNoTracking().FirstOrDefaultAsync(p => p.ProductId == id);
             if (products is null)
@@ -41,9 +41,9 @@ namespace WebAPIUdemy.Controllers
         [HttpPost]
         public ActionResult Post(Product product) 
         {
-            if (product is null)
+            if (!ModelState.IsValid)
             {
-                return BadRequest();
+                return BadRequest(ModelState);
             }
 
            _context!.Products.Add(product);
@@ -55,7 +55,7 @@ namespace WebAPIUdemy.Controllers
         [HttpPut("{id:int:min(1)}")]
         public ActionResult Put(Product product, int id)
         {
-            if(id != product.ProductId)
+            if (id != product.ProductId)
             {
                 return BadRequest("Informe um id valido");
             }
@@ -67,7 +67,7 @@ namespace WebAPIUdemy.Controllers
         }
 
         [HttpDelete("{id:int:min(1)}")]
-        public ActionResult Delete(int id) 
+        public ActionResult Delete(int id)
         {
             var product = _context!.Products.FirstOrDefault(p => p.ProductId == id);
 
