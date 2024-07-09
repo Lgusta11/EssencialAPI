@@ -5,7 +5,7 @@ namespace WebAPIUdemy.Validation;
 
 public class PrimeiraLetraMaisculaAttribute : ValidationAttribute
 {
-    protected override ValidationResult IsValid(object value,
+    protected override ValidationResult? IsValid(object value,
         ValidationContext validationContext)
     {
         if (value == null || string.IsNullOrEmpty(value.ToString()))

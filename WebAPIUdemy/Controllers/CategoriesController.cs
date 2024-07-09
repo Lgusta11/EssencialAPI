@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebAPIUdemy.Context;
+using WebAPIUdemy.Filters;
 using WebAPIUdemy.Model;
 
 namespace WebAPIUdemy.Controllers
@@ -24,6 +25,7 @@ namespace WebAPIUdemy.Controllers
         }
 
         [HttpGet]
+        [ServiceFilter(typeof(ApiLoggingFilter))]
         public async Task<ActionResult<IEnumerable<Category>>> Get()
         {
             try
