@@ -5,13 +5,13 @@ using WebAPIUdemy.Validation;
 
 namespace WebAPIUdemy.Model;
 
-public class Product
+public class Product : IValidatableObject
 { 
     [Key]
     public int ProductId { get; set; }
     [Required(ErrorMessage = "O nome é obrigatório")]
     [StringLength(20, ErrorMessage = "O nome deve ter entre 5 e 20 caracteres", MinimumLength = 5)]
-    [PrimeiraLetraMaisculaAtribute] 
+    [PrimeiraLetraMaisculaAttribute] 
     public string? Name { get; set; }
     [Required]
     [StringLength(10, ErrorMessage = "A descrição deve ter no máximo {1} caracteres")]
@@ -23,10 +23,17 @@ public class Product
     [Required]
     [StringLength(300, MinimumLength = 10)]
     public string? ImageUrl { get; set; }
-
     public float? Stock { get; set; }
     public DateTime? RegistrationDate { get; set; }
     public int CategoryId { get; set; }
     [JsonIgnore]
     public Category? Category { get; set; }
+
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (this.Stock <= 0)
+        {
+            yield return new ValidationResult("O a qauntidade no estoque tem que ser maior que 0", [nameof(Stock)]);
+        }
+    }
 }

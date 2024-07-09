@@ -3,7 +3,7 @@ using System.Reflection.Metadata.Ecma335;
 
 namespace WebAPIUdemy.Validation;
 
-public class PrimeiraLetraMaisculaAtribute : ValidationAttribute
+public class PrimeiraLetraMaisculaAttribute : ValidationAttribute
 {
     protected override ValidationResult IsValid(object value,
         ValidationContext validationContext)

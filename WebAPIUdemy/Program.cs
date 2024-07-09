@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 using WebAPIUdemy.Context;
+using WebAPIUdemy.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +24,7 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    app.ConfigureExceptionHandler();
 }
 
 app.UseHttpsRedirection();
