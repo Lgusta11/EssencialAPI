@@ -28,37 +28,27 @@ namespace WebAPIUdemy.Controllers
         [ServiceFilter(typeof(ApiLoggingFilter))]
         public async Task<ActionResult<IEnumerable<Category>>> Get()
         {
-            try
+
+            var category = await _context!.Categories.AsNoTracking().ToListAsync();
+            if (category is null)
             {
-                var category = await _context!.Categories.AsNoTracking().ToListAsync();
-                if (category is null)
-                {
-                    return NotFound("Nenhuma categoria cadastrada!");
-                }
-                return Ok(category);
+                return NotFound("Nenhuma categoria cadastrada!");
             }
-            catch (Exception)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, "Ocorreu umproblema ao tratar a sua solicitação.");
-            }
+            return Ok(category);
         }
+        
 
         [HttpGet("{id:int:min(1)}", Name = "ObterCategoria")]
         public async Task<ActionResult<Category>> Get(int id)
         {
-            try
-            {
+         
                 var category = await _context!.Categories.AsNoTracking().FirstOrDefaultAsync(c => c.CategoryId == id);
                 if (category is null)
                 {
                     return NotFound($"Categoria com id={id} não encontrada");
                 }
                 return Ok(category);
-            }
-            catch (Exception)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, "Ocorreu um problema ao tratar a sua solicitação.");
-            }
+           
         }
 
 
