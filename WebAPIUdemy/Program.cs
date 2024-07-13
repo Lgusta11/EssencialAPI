@@ -4,6 +4,7 @@ using WebAPIUdemy.Context;
 using WebAPIUdemy.Extensions;
 using WebAPIUdemy.Filters;
 using WebAPIUdemy.Logging;
+using WebAPIUdemy.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +25,8 @@ builder.Services.AddDbContext<CatalogoContext>(options =>
 );
 
 builder.Services.AddScoped<ApiLoggingFilter>();
+builder.Services.AddScoped<ICategoryRepository, CategoriesRepository>(); 
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
 
 builder.Logging.AddProvider(new CustomLoggerProvider(new CustomLoggerProviderConfig 
 { 

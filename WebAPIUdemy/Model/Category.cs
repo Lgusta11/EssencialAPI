@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace WebAPIUdemy.Model;
 
@@ -17,8 +18,8 @@ public class Category
     public string? Name { get; set; }
     [Required]
     [StringLength(100)]
-    public string? ImageUrl { get; set; } 
-
+    public string? ImageUrl { get; set; }
+    [JsonIgnore]
     public ICollection<Product>? Products { get; set; }
 
 }

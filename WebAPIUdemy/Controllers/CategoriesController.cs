@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using WebAPIUdemy.Context;
 using WebAPIUdemy.Filters;
 using WebAPIUdemy.Model;
+using WebAPIUdemy.Repositories;
 
 namespace WebAPIUdemy.Controllers
 {
@@ -10,31 +11,20 @@ namespace WebAPIUdemy.Controllers
     [ApiController]
     public class CategoriesController : ControllerBase
     {
-        private readonly CatalogoContext? _context;
+        private readonly ICategoryRepository? _repository;
 
-        public CategoriesController(CatalogoContext? context)
+        public CategoriesController(ICategoryRepository? repository)
         {
-            _context = context;
-        }
-
-       
-        [HttpGet("produtos")]
-        public async Task<ActionResult<IEnumerable<Category>>> GetCategoriasProdutos()
-        {
-             return await _context!.Categories.Include(p=> p.Products).Where(c=> c.CategoryId <= 5).ToListAsync();
+            _repository = repository;
         }
 
         [HttpGet]
         [ServiceFilter(typeof(ApiLoggingFilter))]
-        public async Task<ActionResult<IEnumerable<Category>>> Get()
+        public ActionResult<IEnumerable<Category>> Get()
         {
+            var categories = _repository!.GetCategories();
+            return Ok(categories);
 
-            var category = await _context!.Categories.AsNoTracking().ToListAsync();
-            if (category is null)
-            {
-                return NotFound("Nenhuma categoria cadastrada!");
-            }
-            return Ok(category);
         }
         
 
@@ -42,7 +32,7 @@ namespace WebAPIUdemy.Controllers
         public async Task<ActionResult<Category>> Get(int id)
         {
          
-                var category = await _context!.Categories.AsNoTracking().FirstOrDefaultAsync(c => c.CategoryId == id);
+                var category = _repository!.GetCategory(id);
                 if (category is null)
                 {
                     return NotFound($"Categoria com id={id} não encontrada");
@@ -52,21 +42,18 @@ namespace WebAPIUdemy.Controllers
         }
 
 
-
-    
-
-    [HttpPost]
+        [HttpPost]
         public ActionResult Post(Category category)
         {
             if (category is null)
             {
                 return BadRequest();
             }
-            _context!.Categories.Add(category);
-            _context.SaveChanges();
+            
+            var categoryCreate = _repository!.Create(category);
 
             return new CreatedAtRouteResult("ObterCategoria",
-                new { id = category.CategoryId }, category);
+                new { id = categoryCreate.CategoryId }, categoryCreate);
         }
 
         [HttpPut("{id:int:min(1)}")]
@@ -77,26 +64,23 @@ namespace WebAPIUdemy.Controllers
                 return BadRequest("Informe um id valido");
             }
 
-            _context!.Entry(category).State = EntityState.Modified;
-            _context!.SaveChanges();
-
+           _repository!.Update(category);
             return Ok(category);
+
         }
 
         [HttpDelete("{id:int:min(1)}")]
         public ActionResult Delete(int id)
         {
-            var category = _context!.Categories.FirstOrDefault(c => c.CategoryId == id);
+            var category = _repository!.GetCategory(id);
 
             if (category is null)
             {
                 return NotFound("Produto não localizado");
             }
 
-            _context!.Categories.Remove(category);
-            _context!.SaveChanges();
-
-            return Ok(category);
+            var categoryDelete = _repository.Delete(id);
+            return Ok(categoryDelete);
         }
     }
 }
