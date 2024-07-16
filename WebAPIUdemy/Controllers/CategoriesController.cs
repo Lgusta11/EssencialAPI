@@ -1,6 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using WebAPIUdemy.Context;
 using WebAPIUdemy.Filters;
 using WebAPIUdemy.Model;
 using WebAPIUdemy.Repositories;
@@ -11,7 +9,7 @@ namespace WebAPIUdemy.Controllers
     [ApiController]
     public class CategoriesController : ControllerBase
     {
-        private readonly ICategoryRepository? _repository;
+        private readonly IRepository<Category> _repository;
 
         public CategoriesController(ICategoryRepository? repository)
         {
@@ -22,7 +20,7 @@ namespace WebAPIUdemy.Controllers
         [ServiceFilter(typeof(ApiLoggingFilter))]
         public ActionResult<IEnumerable<Category>> Get()
         {
-            var categories = _repository!.GetCategories();
+            var categories = _repository!.GetAll();
             return Ok(categories);
 
         }
@@ -32,7 +30,7 @@ namespace WebAPIUdemy.Controllers
         public async Task<ActionResult<Category>> Get(int id)
         {
          
-                var category = _repository!.GetCategory(id);
+                var category = _repository!.Get(c => c.CategoryId == id);
                 if (category is null)
                 {
                     return NotFound($"Categoria com id={id} não encontrada");
@@ -45,11 +43,11 @@ namespace WebAPIUdemy.Controllers
         [HttpPost]
         public ActionResult Post(Category category)
         {
-            if (category is null)
+            if (!ModelState.IsValid)
             {
-                return BadRequest();
+                return BadRequest(ModelState);
             }
-            
+
             var categoryCreate = _repository!.Create(category);
 
             return new CreatedAtRouteResult("ObterCategoria",
@@ -72,14 +70,14 @@ namespace WebAPIUdemy.Controllers
         [HttpDelete("{id:int:min(1)}")]
         public ActionResult Delete(int id)
         {
-            var category = _repository!.GetCategory(id);
+            var category = _repository!.Get(c => c.CategoryId == id);
 
             if (category is null)
             {
                 return NotFound("Produto não localizado");
             }
 
-            var categoryDelete = _repository.Delete(id);
+            var categoryDelete = _repository.Delete(category);
             return Ok(categoryDelete);
         }
     }

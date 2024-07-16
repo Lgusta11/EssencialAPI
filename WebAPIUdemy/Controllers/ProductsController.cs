@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using WebAPIUdemy.Context;
 using WebAPIUdemy.Model;
+using WebAPIUdemy.Repositories;
 
 namespace WebAPIUdemy.Controllers
 {
@@ -9,17 +10,33 @@ namespace WebAPIUdemy.Controllers
     [ApiController]
     public class ProductsController : ControllerBase
     {
-        private readonly CatalogoContext? _context;
+        private readonly IRepository<Product> _repository;
+        private readonly IProductRepository _productRepository;
 
-        public ProductsController(CatalogoContext? context)
+        public ProductsController(IProductRepository? repository, IProductRepository productRepository)
         {
-            _context = context;
+            _repository = repository;
+            _productRepository = productRepository;
         }
 
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Product>>> Get() 
+        [HttpGet("products/{id}")]
+        public ActionResult<IEnumerable<Product>> GetProductByCategory(int id)
         {
-            var products = await _context!.Products.AsNoTracking().ToListAsync();
+            var products = _productRepository.GetProductsByCategory(id);
+            if (products is null)
+            {
+                return StatusCode(404, $"Não encontrado!");
+            }
+
+            return Ok(products);
+        }
+
+
+
+        [HttpGet]
+        public ActionResult<IEnumerable<Product>> Get() 
+        {
+            var products = _repository!.GetAll();
             if (products is null)
             {
                 return NotFound("Produto não encontrado");  
@@ -28,9 +45,9 @@ namespace WebAPIUdemy.Controllers
         }
 
         [HttpGet("{id:int:min(1)}", Name = "ObterProduto")]
-        public async Task<ActionResult<Product>> Get(int id)
+        public ActionResult<Product> Get(int id)
         {
-            var products = await _context!.Products.AsNoTracking().FirstOrDefaultAsync(p => p.ProductId == id);
+            var products = _repository?.Get(p => p.ProductId == id);
             if (products is null)
             {
                 return NotFound("Produto não encontrado");
@@ -46,10 +63,9 @@ namespace WebAPIUdemy.Controllers
                 return BadRequest(ModelState);
             }
 
-           _context!.Products.Add(product);
-           _context.SaveChanges();
+            var productCreate = _repository!.Create(product);
 
-           return new CreatedAtRouteResult("ObterProduto", new { id = product.ProductId} , product);            
+            return new CreatedAtRouteResult("ObterProduto", new { id = productCreate.ProductId} , productCreate);            
         }
 
         [HttpPut("{id:int:min(1)}")]
@@ -60,28 +76,24 @@ namespace WebAPIUdemy.Controllers
                 return BadRequest("Informe um id valido");
             }
 
-            _context!.Entry(product).State = EntityState.Modified;
-            _context!.SaveChanges();
+            var products = _repository!.Update(product);
 
-            return Ok(product);
+            return Ok(products);
         }
 
         [HttpDelete("{id:int:min(1)}")]
         public ActionResult Delete(int id)
         {
-            var product = _context!.Products.FirstOrDefault(p => p.ProductId == id);
+            var product = _repository?.Get(p => p.ProductId == id);
 
             if (product is null)
             {
                 return NotFound("Produto não localizado");
             }
 
-            _context!.Products.Remove(product);
-            _context!.SaveChanges();
-
-            return Ok(product);
+            var productDelete = _repository!.Delete(product);
+          
+            return Ok(productDelete);
         }
-
-
     }
 }

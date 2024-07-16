@@ -2,11 +2,6 @@
 
 namespace WebAPIUdemy.Repositories;
 
-public interface ICategoryRepository
+public interface ICategoryRepository : IRepository<Category>
 {
-    IEnumerable<Category> GetCategories();
-    Category GetCategory(int id);
-    Category Create(Category category);
-    Category Update(Category category);
-    Category Delete(int id);
 }
