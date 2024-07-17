@@ -7,7 +7,6 @@ namespace WebAPIUdemy.Model;
 
 public class Product : IValidatableObject
 { 
-    [Key]
     public int ProductId { get; set; }
     [Required(ErrorMessage = "O nome é obrigatório")]
     [StringLength(20, ErrorMessage = "O nome deve ter entre 5 e 20 caracteres", MinimumLength = 5)]

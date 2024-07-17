@@ -1,6 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.JsonPatch;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebAPIUdemy.Context;
+using WebAPIUdemy.DTOs;
+using WebAPIUdemy.DTOs.Mappings;
 using WebAPIUdemy.Model;
 using WebAPIUdemy.Repositories;
 
@@ -18,70 +21,116 @@ namespace WebAPIUdemy.Controllers
         }
 
         [HttpGet("productsbycategory/{id}")]
-        public ActionResult<IEnumerable<Product>> GetProductByCategory(int id)
+        public ActionResult<IEnumerable<ProductDTO>> GetProductByCategory(int id)
         {
             var products = _unitOfWork!.ProductRepository.GetProductsByCategory(id);
 
             if (products is null)
                 return NotFound("Produto não encontrado");
 
-            return Ok(products);
+            var productsDto = products.ToProductDtoList();
+
+            return Ok(productsDto);
         }
 
 
 
         [HttpGet]
-        public ActionResult<IEnumerable<Product>> Get() 
+        public ActionResult<IEnumerable<ProductDTO>> Get()
         {
             var products = _unitOfWork!.ProductRepository.GetAll();
             if (products is null)
             {
-                return NotFound("Produto não encontrado");  
+                return NotFound("Produto não encontrado");
             }
-            return Ok(products);
+            var productsDto = products.ToProductDtoList();
+            return Ok(productsDto);
         }
 
         [HttpGet("{id:int:min(1)}", Name = "ObterProduto")]
-        public ActionResult<Product> Get(int id)
+        public ActionResult<ProductDTO> Get(int id)
         {
-            var products = _unitOfWork!.ProductRepository.Get(p => p.ProductId == id);
-            if (products is null)
+            var product = _unitOfWork!.ProductRepository.Get(p => p.ProductId == id);
+            if (product is null)
             {
                 return NotFound("Produto não encontrado");
             }
-            return products;
+
+            var productDto = product.ToProductDTO(); 
+            
+            return Ok(product);
         }
 
         [HttpPost]
-        public ActionResult Post(Product product) 
+        public ActionResult<ProductDTO> Post(ProductDTO productDto)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var productCreate = _unitOfWork!.ProductRepository.Create(product);
+            var product = productDto.ToProduct();
+
+            var productCreated = _unitOfWork!.ProductRepository.Create(product);
             _unitOfWork.Commit();
 
-            return new CreatedAtRouteResult("ObterProduto", new { id = productCreate!.ProductId} , productCreate);            
+            var newProductDto = productCreated!.ToProductDTO();
+
+            return new CreatedAtRouteResult("ObterProduto", new { id = newProductDto!.ProductId }, newProductDto);
         }
 
-        [HttpPut("{id:int:min(1)}")]
-        public ActionResult Put(Product product, int id)
+        [HttpPatch("{id}/UpdatePartial")]
+        public ActionResult<ProductDTOUpdateResponse> Patch(int id, JsonPatchDocument<ProductDTOUpdateRequest> patchProductDTO)
         {
-            if (id != product.ProductId)
+            if (patchProductDTO is null || id <= 0)
+                return BadRequest();
+
+            var product = _unitOfWork!.ProductRepository.Get(p => p.ProductId == id);
+
+            if (product is null)
+                return NotFound();
+
+            var productUpdateRequest = product.ProductUpdateDtoRequest();
+
+            if (productUpdateRequest is null)
+                return BadRequest("Product update request could not be created.");
+
+            patchProductDTO.ApplyTo(productUpdateRequest, ModelState);
+
+            if (!ModelState.IsValid || !TryValidateModel(productUpdateRequest))
+                return BadRequest(ModelState);
+
+            var productUpdated = productUpdateRequest!.ProductUpdateDtoRequestToProduct();
+            _unitOfWork!.ProductRepository.Update(productUpdated!);
+            _unitOfWork!.Commit();
+
+            var ProductResponse = productUpdated!.ToProductUpdateResponse();
+            return Ok(ProductResponse);
+        }
+
+
+
+
+        [HttpPut("{id:int:min(1)}")]
+        public ActionResult<ProductDTO> Put(ProductDTO productDto, int id)
+        {
+            if (id != productDto.ProductId)
             {
                 return BadRequest("Informe um id valido");
             }
 
-            var products = _unitOfWork!.ProductRepository.Update(product);
+            var product = productDto.ToProduct();
+
+            var productsUpdated = _unitOfWork!.ProductRepository.Update(product);
             _unitOfWork.Commit();
 
-            return Ok(products);
+            var newUpdatedProductDto = productsUpdated!.ToProductDTO();
+
+            return Ok(newUpdatedProductDto);
         }
 
         [HttpDelete("{id:int:min(1)}")]
-        public ActionResult Delete(int id)
+        public ActionResult<ProductDTO> Delete(int id)
         {
             var product = _unitOfWork!.ProductRepository.Get(p => p.ProductId == id);
 
@@ -92,6 +141,8 @@ namespace WebAPIUdemy.Controllers
 
             var productDelete = _unitOfWork!.ProductRepository.Delete(product);
             _unitOfWork.Commit();
+
+            var deletedProduct = productDelete!.ToProductDTO();
 
             return Ok(productDelete);
         }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using WebAPIUdemy.DTOs;
+using WebAPIUdemy.DTOs.Mappings;
 using WebAPIUdemy.Filters;
 using WebAPIUdemy.Model;
 using WebAPIUdemy.Repositories;
@@ -23,43 +24,25 @@ namespace WebAPIUdemy.Controllers
         public ActionResult<IEnumerable<CategoryDTO>> Get()
         {
             var categories = _unitOfWork!.CategoryRepository.GetAll();
-
-            var categoriesDto = new List<CategoryDTO>();
-            foreach (var category in categories)
-            {
-                var categoryDto = new CategoryDTO()
-                {
-                    CategoryId = category.CategoryId,
-                    Name = category.Name!,
-                    ImageUrl = category.ImageUrl!
-                };
-                categoriesDto.Add(categoryDto);
-            }
+            var categoriesDto = categories.ToCategoryDtoList();
 
             return Ok(categoriesDto);
 
         }
-        
+
 
         [HttpGet("{id:int:min(1)}", Name = "ObterCategoria")]
         public ActionResult<CategoryDTO> Get(int id)
         {
-         
-                var category = _unitOfWork!.CategoryRepository.Get(c => c.CategoryId == id);
-                if (category is null)
-                {
-                    return NotFound($"Categoria com id={id} não encontrada");
-                }
 
-
-            var categoryDto = new CategoryDTO()
+            var category = _unitOfWork!.CategoryRepository.Get(c => c.CategoryId == id);
+            if (category is null)
             {
-                CategoryId = category.CategoryId,
-                Name = category.Name!,
-                ImageUrl = category.ImageUrl!
-            };
-                return Ok(categoryDto);
-           
+                return NotFound($"Categoria com id={id} não encontrada");
+            }
+            var categoryDto = category.ToCategoryDTO();
+            return Ok(categoryDto);
+
         }
 
 
@@ -71,22 +54,12 @@ namespace WebAPIUdemy.Controllers
                 return BadRequest(ModelState);
             }
 
-            var category = new Category()
-            {
-                CategoryId = categoryDto.CategoryId,
-                Name = categoryDto.Name!,
-                ImageUrl = categoryDto.ImageUrl!
-            };
+            var category = categoryDto.ToCartegory();
 
-            var categoryCreate = _unitOfWork!.CategoryRepository.Create(category);
+            var categoryCreated = _unitOfWork!.CategoryRepository.Create(category);
             _unitOfWork.Commit();
 
-            var newCategoryDto = new CategoryDTO()
-            {
-                CategoryId = categoryCreate.CategoryId,
-                Name = categoryCreate.Name!,
-                ImageUrl = categoryCreate.ImageUrl!
-            };
+            var newCategoryDto = categoryCreated!.ToCategoryDTO();
 
             return new CreatedAtRouteResult("ObterCategoria",
                 new { id = newCategoryDto!.CategoryId }, newCategoryDto);
@@ -100,22 +73,12 @@ namespace WebAPIUdemy.Controllers
                 return BadRequest("Informe um id valido");
             }
 
-            var category = new Category()
-            {
-                CategoryId = categoryDto.CategoryId,
-                Name = categoryDto.Name!,
-                ImageUrl = categoryDto.ImageUrl!
-            };
+            var category = categoryDto.ToCartegory();
 
-            var categoryUpdated = _unitOfWork!.CategoryRepository.Update(category);
+            var categoryUpdated = _unitOfWork!.CategoryRepository.Update(category!);
             _unitOfWork.Commit();
 
-            var newUpdatedCategoryDto = new CategoryDTO()
-            {
-                CategoryId = categoryUpdated.CategoryId,
-                Name = categoryUpdated.Name!,
-                ImageUrl = categoryUpdated.ImageUrl!
-            };
+            var newUpdatedCategoryDto = categoryUpdated!.ToCategoryDTO();
 
             return Ok(newUpdatedCategoryDto);
 
@@ -134,12 +97,7 @@ namespace WebAPIUdemy.Controllers
             var categoryDelete = _unitOfWork.CategoryRepository.Delete(category);
             _unitOfWork.Commit();
 
-            var deletedCategory = new CategoryDTO()
-            {
-                CategoryId = categoryDelete.CategoryId,
-                Name = categoryDelete.Name!,
-                ImageUrl = categoryDelete.ImageUrl!
-            };
+            var deletedCategory = categoryDelete!.ToCategoryDTO();
             return Ok(deletedCategory);
         }
     }

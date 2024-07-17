@@ -7,8 +7,8 @@ public class CategoryDTO
     public int CategoryId { get; set; }
     [Required]
     [StringLength(100)]
-    public string Name { get; set; }
+    public string? Name { get; set; }
     [Required]
     [StringLength(300)]
-    public string ImageUrl { get; set; }
+    public string? ImageUrl { get; set; }
 }
