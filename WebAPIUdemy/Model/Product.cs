@@ -14,7 +14,7 @@ public class Product : IValidatableObject
     [PrimeiraLetraMaisculaAttribute] 
     public string? Name { get; set; }
     [Required]
-    [StringLength(10, ErrorMessage = "A descrição deve ter no máximo {1} caracteres")]
+    [StringLength(50, ErrorMessage = "A descrição deve ter no máximo {1} caracteres")]
     public string? Description { get; set; }
     [Required]
     [Column(TypeName = "decimal(10,2)")]

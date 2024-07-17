@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using WebAPIUdemy.DTOs;
 using WebAPIUdemy.Filters;
 using WebAPIUdemy.Model;
 using WebAPIUdemy.Repositories;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace WebAPIUdemy.Controllers
 {
@@ -9,76 +11,136 @@ namespace WebAPIUdemy.Controllers
     [ApiController]
     public class CategoriesController : ControllerBase
     {
-        private readonly IRepository<Category> _repository;
+        private readonly IUnitOfWork? _unitOfWork;
 
-        public CategoriesController(ICategoryRepository? repository)
+        public CategoriesController(IUnitOfWork? unitOfWork)
         {
-            _repository = repository;
+            _unitOfWork = unitOfWork;
         }
 
         [HttpGet]
         [ServiceFilter(typeof(ApiLoggingFilter))]
-        public ActionResult<IEnumerable<Category>> Get()
+        public ActionResult<IEnumerable<CategoryDTO>> Get()
         {
-            var categories = _repository!.GetAll();
-            return Ok(categories);
+            var categories = _unitOfWork!.CategoryRepository.GetAll();
+
+            var categoriesDto = new List<CategoryDTO>();
+            foreach (var category in categories)
+            {
+                var categoryDto = new CategoryDTO()
+                {
+                    CategoryId = category.CategoryId,
+                    Name = category.Name!,
+                    ImageUrl = category.ImageUrl!
+                };
+                categoriesDto.Add(categoryDto);
+            }
+
+            return Ok(categoriesDto);
 
         }
         
 
         [HttpGet("{id:int:min(1)}", Name = "ObterCategoria")]
-        public async Task<ActionResult<Category>> Get(int id)
+        public ActionResult<CategoryDTO> Get(int id)
         {
          
-                var category = _repository!.Get(c => c.CategoryId == id);
+                var category = _unitOfWork!.CategoryRepository.Get(c => c.CategoryId == id);
                 if (category is null)
                 {
                     return NotFound($"Categoria com id={id} não encontrada");
                 }
-                return Ok(category);
+
+
+            var categoryDto = new CategoryDTO()
+            {
+                CategoryId = category.CategoryId,
+                Name = category.Name!,
+                ImageUrl = category.ImageUrl!
+            };
+                return Ok(categoryDto);
            
         }
 
 
         [HttpPost]
-        public ActionResult Post(Category category)
+        public ActionResult<CategoryDTO> Post(CategoryDTO categoryDto)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var categoryCreate = _repository!.Create(category);
+            var category = new Category()
+            {
+                CategoryId = categoryDto.CategoryId,
+                Name = categoryDto.Name!,
+                ImageUrl = categoryDto.ImageUrl!
+            };
+
+            var categoryCreate = _unitOfWork!.CategoryRepository.Create(category);
+            _unitOfWork.Commit();
+
+            var newCategoryDto = new CategoryDTO()
+            {
+                CategoryId = categoryCreate.CategoryId,
+                Name = categoryCreate.Name!,
+                ImageUrl = categoryCreate.ImageUrl!
+            };
 
             return new CreatedAtRouteResult("ObterCategoria",
-                new { id = categoryCreate.CategoryId }, categoryCreate);
+                new { id = newCategoryDto!.CategoryId }, newCategoryDto);
         }
 
         [HttpPut("{id:int:min(1)}")]
-        public ActionResult Put(Category category, int id)
+        public ActionResult<CategoryDTO> Put(CategoryDTO categoryDto, int id)
         {
-            if (id != category.CategoryId)
+            if (id != categoryDto.CategoryId)
             {
                 return BadRequest("Informe um id valido");
             }
 
-           _repository!.Update(category);
-            return Ok(category);
+            var category = new Category()
+            {
+                CategoryId = categoryDto.CategoryId,
+                Name = categoryDto.Name!,
+                ImageUrl = categoryDto.ImageUrl!
+            };
+
+            var categoryUpdated = _unitOfWork!.CategoryRepository.Update(category);
+            _unitOfWork.Commit();
+
+            var newUpdatedCategoryDto = new CategoryDTO()
+            {
+                CategoryId = categoryUpdated.CategoryId,
+                Name = categoryUpdated.Name!,
+                ImageUrl = categoryUpdated.ImageUrl!
+            };
+
+            return Ok(newUpdatedCategoryDto);
 
         }
 
         [HttpDelete("{id:int:min(1)}")]
-        public ActionResult Delete(int id)
+        public ActionResult<CategoryDTO> Delete(int id)
         {
-            var category = _repository!.Get(c => c.CategoryId == id);
+            var category = _unitOfWork!.CategoryRepository.Get(c => c.CategoryId == id);
 
             if (category is null)
             {
                 return NotFound("Produto não localizado");
             }
 
-            var categoryDelete = _repository.Delete(category);
-            return Ok(categoryDelete);
+            var categoryDelete = _unitOfWork.CategoryRepository.Delete(category);
+            _unitOfWork.Commit();
+
+            var deletedCategory = new CategoryDTO()
+            {
+                CategoryId = categoryDelete.CategoryId,
+                Name = categoryDelete.Name!,
+                ImageUrl = categoryDelete.ImageUrl!
+            };
+            return Ok(deletedCategory);
         }
     }
 }

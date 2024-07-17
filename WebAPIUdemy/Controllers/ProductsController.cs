@@ -10,23 +10,20 @@ namespace WebAPIUdemy.Controllers
     [ApiController]
     public class ProductsController : ControllerBase
     {
-        private readonly IRepository<Product> _repository;
-        private readonly IProductRepository _productRepository;
+        private readonly IUnitOfWork? _unitOfWork;
 
-        public ProductsController(IProductRepository? repository, IProductRepository productRepository)
+        public ProductsController(IUnitOfWork? unitOfWork)
         {
-            _repository = repository;
-            _productRepository = productRepository;
+            _unitOfWork = unitOfWork;
         }
 
-        [HttpGet("products/{id}")]
+        [HttpGet("productsbycategory/{id}")]
         public ActionResult<IEnumerable<Product>> GetProductByCategory(int id)
         {
-            var products = _productRepository.GetProductsByCategory(id);
+            var products = _unitOfWork!.ProductRepository.GetProductsByCategory(id);
+
             if (products is null)
-            {
-                return StatusCode(404, $"Não encontrado!");
-            }
+                return NotFound("Produto não encontrado");
 
             return Ok(products);
         }
@@ -36,7 +33,7 @@ namespace WebAPIUdemy.Controllers
         [HttpGet]
         public ActionResult<IEnumerable<Product>> Get() 
         {
-            var products = _repository!.GetAll();
+            var products = _unitOfWork!.ProductRepository.GetAll();
             if (products is null)
             {
                 return NotFound("Produto não encontrado");  
@@ -47,7 +44,7 @@ namespace WebAPIUdemy.Controllers
         [HttpGet("{id:int:min(1)}", Name = "ObterProduto")]
         public ActionResult<Product> Get(int id)
         {
-            var products = _repository?.Get(p => p.ProductId == id);
+            var products = _unitOfWork!.ProductRepository.Get(p => p.ProductId == id);
             if (products is null)
             {
                 return NotFound("Produto não encontrado");
@@ -63,9 +60,10 @@ namespace WebAPIUdemy.Controllers
                 return BadRequest(ModelState);
             }
 
-            var productCreate = _repository!.Create(product);
+            var productCreate = _unitOfWork!.ProductRepository.Create(product);
+            _unitOfWork.Commit();
 
-            return new CreatedAtRouteResult("ObterProduto", new { id = productCreate.ProductId} , productCreate);            
+            return new CreatedAtRouteResult("ObterProduto", new { id = productCreate!.ProductId} , productCreate);            
         }
 
         [HttpPut("{id:int:min(1)}")]
@@ -76,7 +74,8 @@ namespace WebAPIUdemy.Controllers
                 return BadRequest("Informe um id valido");
             }
 
-            var products = _repository!.Update(product);
+            var products = _unitOfWork!.ProductRepository.Update(product);
+            _unitOfWork.Commit();
 
             return Ok(products);
         }
@@ -84,15 +83,16 @@ namespace WebAPIUdemy.Controllers
         [HttpDelete("{id:int:min(1)}")]
         public ActionResult Delete(int id)
         {
-            var product = _repository?.Get(p => p.ProductId == id);
+            var product = _unitOfWork!.ProductRepository.Get(p => p.ProductId == id);
 
             if (product is null)
             {
                 return NotFound("Produto não localizado");
             }
 
-            var productDelete = _repository!.Delete(product);
-          
+            var productDelete = _unitOfWork!.ProductRepository.Delete(product);
+            _unitOfWork.Commit();
+
             return Ok(productDelete);
         }
     }

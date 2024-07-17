@@ -28,6 +28,8 @@ builder.Services.AddScoped<ApiLoggingFilter>();
 builder.Services.AddScoped<ICategoryRepository, CategoriesRepository>(); 
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
 
 builder.Logging.AddProvider(new CustomLoggerProvider(new CustomLoggerProviderConfig 
 { 
