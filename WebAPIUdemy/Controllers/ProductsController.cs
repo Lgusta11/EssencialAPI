@@ -1,11 +1,10 @@
 ﻿using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using WebAPIUdemy.Context;
 using WebAPIUdemy.DTOs;
 using WebAPIUdemy.DTOs.Mappings;
-using WebAPIUdemy.Model;
+using WebAPIUdemy.Pagination;
 using WebAPIUdemy.Repositories;
+using System.Text.Json;
 
 namespace WebAPIUdemy.Controllers
 {
@@ -37,6 +36,30 @@ namespace WebAPIUdemy.Controllers
         }
 
 
+        [HttpGet("pagination")]
+        public ActionResult<IEnumerable<ProductDTO>> Get([FromQuery] ProductsParameters productsParameters)
+        {
+            var products = _unitOfWork!.ProductRepository.GetProducts(productsParameters);
+            if (products is null)
+            {
+                return NotFound("Produtos não encontrados");
+            }
+
+            var metaData = new
+            {
+                products.TotalCount,
+                products.PageSize,
+                products.CurrentPage,
+                products.TotalPages,
+                products.HasNext,
+                products.HasPrevious
+            };
+
+            Response.Headers.Append("X-Pagination", JsonSerializer.Serialize(metaData));
+
+            var productsDto = products.ToProductDtoList();
+            return Ok(productsDto);
+        }
 
         [HttpGet]
         public ActionResult<IEnumerable<ProductDTO>> Get()
