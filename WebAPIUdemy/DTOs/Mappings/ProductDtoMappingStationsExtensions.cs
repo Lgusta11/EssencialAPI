@@ -85,7 +85,7 @@ public static class ProductDtoMappingStationsExtensions
 
         return new ProductDTOUpdateResponse
         {
-            ProductId = product.ProductId,
+            
             Name = product.Name,
             Description = product.Description,
             Price = product.Price,

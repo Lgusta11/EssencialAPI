@@ -12,7 +12,7 @@ public class ProductDTOUpdateRequest : IValidatableObject
     {
         if (RegistrationDate.Date < DateTime.Now.Date)
         {
-            yield return new ValidationResult("A data deve ser maior que a data atual",
+            yield return new ValidationResult("A data deve ser maior ou igual que a data atual",
                 new[] { nameof(this.RegistrationDate) });
         }
     }

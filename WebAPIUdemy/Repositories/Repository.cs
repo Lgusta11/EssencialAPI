@@ -7,7 +7,7 @@ namespace WebAPIUdemy.Repositories;
 public class Repository<T> : IRepository<T> where T : class
 {
 
-    private readonly CatalogoContext? _context;
+    protected readonly CatalogoContext? _context;
 
     public Repository(CatalogoContext? context)
     {

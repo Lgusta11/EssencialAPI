@@ -6,9 +6,10 @@ namespace WebAPIUdemy.Repositories;
 
 public class CategoriesRepository : Repository<Category> ,ICategoryRepository
 {
-    public CategoriesRepository(CatalogoContext? context) : base(context)
-    {
-    }
+    public CategoriesRepository(CatalogoContext? context) : base(context){}
 
-  
+    public bool CategoryExists(int categoryId)
+    {
+        return _context.Categories.Any(c => c.CategoryId == categoryId);
+    }
 }
