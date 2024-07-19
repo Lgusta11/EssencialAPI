@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 using WebAPIUdemy.DTOs;
 using WebAPIUdemy.DTOs.Mappings;
 using WebAPIUdemy.Filters;
 using WebAPIUdemy.Model;
+using WebAPIUdemy.Pagination;
 using WebAPIUdemy.Repositories;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
@@ -28,6 +30,27 @@ namespace WebAPIUdemy.Controllers
 
             return Ok(categoriesDto);
 
+        }
+
+        [HttpGet("pagination")]
+        public ActionResult<IEnumerable<CategoryDTO>> Get([FromQuery] CategoriesParameters categoriesParameters)
+        {
+            var categories = _unitOfWork?.CategoryRepository.GetCategories(categoriesParameters);
+
+            var metaData = new
+            {
+                categories.TotalCount,
+                categories.PageSize,
+                categories.CurrentPage,
+                categories.TotalPages,
+                categories.HasNext,
+                categories.HasPrevious
+            };
+
+            Response.Headers.Append("X-Pagination", JsonSerializer.Serialize(metaData));
+
+            var categoriesDto = categories.ToCategoryDtoList();
+            return Ok(categoriesDto);
         }
 
 
