@@ -2,6 +2,7 @@
 using WebAPIUdemy.Context;
 using WebAPIUdemy.Model;
 using WebAPIUdemy.Pagination;
+using WebAPIUdemy.Pagination.Filters;
 
 namespace WebAPIUdemy.Repositories;
 
@@ -19,5 +20,18 @@ public class CategoriesRepository : Repository<Category> ,ICategoryRepository
         var categories = GetAll().OrderBy(p => p.CategoryId).AsQueryable();
         var orderedCategories = PagedList<Category>.ToPagedList(categories, categoriesParameters.PageNumber, categoriesParameters.PageSize);
         return orderedCategories;
+    }
+
+    public PagedList<Category> GetCategoriesFilterName(CategoriesFilterName categoriesParams)
+    {
+        var categories = GetAll().AsQueryable();
+
+        if (!string.IsNullOrEmpty(categoriesParams.Name))
+        {
+            categories = categories.Where(c => c.Name.Contains(categoriesParams.Name));
+        }
+        var filteredCategories = PagedList<Category>.ToPagedList(categories, categoriesParams.PageNumber, categoriesParams.PageSize);
+
+        return filteredCategories;
     }
 }

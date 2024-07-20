@@ -5,6 +5,7 @@ using WebAPIUdemy.DTOs.Mappings;
 using WebAPIUdemy.Filters;
 using WebAPIUdemy.Model;
 using WebAPIUdemy.Pagination;
+using WebAPIUdemy.Pagination.Filters;
 using WebAPIUdemy.Repositories;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
@@ -37,22 +38,16 @@ namespace WebAPIUdemy.Controllers
         {
             var categories = _unitOfWork?.CategoryRepository.GetCategories(categoriesParameters);
 
-            var metaData = new
-            {
-                categories.TotalCount,
-                categories.PageSize,
-                categories.CurrentPage,
-                categories.TotalPages,
-                categories.HasNext,
-                categories.HasPrevious
-            };
-
-            Response.Headers.Append("X-Pagination", JsonSerializer.Serialize(metaData));
-
-            var categoriesDto = categories.ToCategoryDtoList();
-            return Ok(categoriesDto);
+            return GetCategories(categories);
         }
 
+        [HttpGet("filter/name/pagination")]
+        public ActionResult<IEnumerable<CategoryDTO>> GetCategoriesFiltered([FromQuery] CategoriesFilterName categoriesFilter)
+        {
+            var categoriesFiltered = _unitOfWork.CategoryRepository.GetCategoriesFilterName(categoriesFilter);
+
+            return Ok(categoriesFiltered);
+        }
 
         [HttpGet("{id:int:min(1)}", Name = "ObterCategoria")]
         public ActionResult<CategoryDTO> Get(int id)
@@ -68,7 +63,23 @@ namespace WebAPIUdemy.Controllers
 
         }
 
+        private ActionResult<IEnumerable<CategoryDTO>> GetCategories(PagedList<Category>? categories)
+        {
+            var metaData = new
+            {
+                categories.TotalCount,
+                categories.PageSize,
+                categories.CurrentPage,
+                categories.TotalPages,
+                categories.HasNext,
+                categories.HasPrevious
+            };
 
+            Response.Headers.Append("X-Pagination", JsonSerializer.Serialize(metaData));
+
+            var categoriesDto = categories.ToCategoryDtoList();
+            return Ok(categoriesDto);
+        }
         [HttpPost]
         public ActionResult<CategoryDTO> Post(CategoryDTO categoryDto)
         {
