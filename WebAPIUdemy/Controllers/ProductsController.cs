@@ -5,6 +5,8 @@ using WebAPIUdemy.DTOs.Mappings;
 using WebAPIUdemy.Pagination;
 using WebAPIUdemy.Repositories;
 using System.Text.Json;
+using WebAPIUdemy.Pagination.Filters;
+using WebAPIUdemy.Model;
 
 namespace WebAPIUdemy.Controllers
 {
@@ -45,6 +47,23 @@ namespace WebAPIUdemy.Controllers
                 return NotFound("Produtos não encontrados");
             }
 
+            return GetProducts(products);
+        }
+
+        [HttpGet("filter/price/pagination")]
+        public ActionResult<IEnumerable<ProductDTO>> GetProductsPrice([FromQuery] ProductsFilterPrice productsFilterParameters)
+        {
+            var products = _unitOfWork.ProductRepository.GetProductsFilterPrice(productsFilterParameters);
+            if (products is null)
+            {
+                return NotFound("Produtos não encontrados");
+            }
+
+            return GetProducts(products);
+        }
+
+        private ActionResult<IEnumerable<ProductDTO>> GetProducts(PagedList<Product>? products)
+        {
             var metaData = new
             {
                 products.TotalCount,
@@ -60,6 +79,7 @@ namespace WebAPIUdemy.Controllers
             var productsDto = products.ToProductDtoList();
             return Ok(productsDto);
         }
+
 
         [HttpGet]
         public ActionResult<IEnumerable<ProductDTO>> Get()
