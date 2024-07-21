@@ -6,7 +6,7 @@ namespace WebAPIUdemy.Repositories;
 
 public interface ICategoryRepository : IRepository<Category>
 {
-    bool CategoryExists(int categoryId);
-    PagedList<Category> GetCategories(CategoriesParameters categoriesParameters);
-    PagedList<Category> GetCategoriesFilterName(CategoriesFilterName categoriesParams);
+    Task<bool> CategoryExistsAsync(int categoryId);
+    Task<PagedList<Category>> GetCategoriesAsync(CategoriesParameters categoriesParameters);
+    Task<PagedList<Category>> GetCategoriesFilterNameAsync(CategoriesFilterName categoriesParams);
 }

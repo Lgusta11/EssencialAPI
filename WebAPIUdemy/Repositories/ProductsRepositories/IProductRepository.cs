@@ -6,7 +6,7 @@ namespace WebAPIUdemy.Repositories;
 
 public interface IProductRepository : IRepository<Product>
 {
-    PagedList<Product> GetProducts(ProductsParameters productsParams);
-    PagedList<Product> GetProductsFilterPrice(ProductsFilterPrice productsFilterParams);
-    IEnumerable<Product> GetProductsByCategory(int id);
+    Task<PagedList<Product>> GetProductsAsync(ProductsParameters productsParams);
+    Task<PagedList<Product>> GetProductsFilterPriceAsync(ProductsFilterPrice productsFilterParams);
+    Task<IEnumerable<Product>> GetProductsByCategoryAsync(int id);
 }

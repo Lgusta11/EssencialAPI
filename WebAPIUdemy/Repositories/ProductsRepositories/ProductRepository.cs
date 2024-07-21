@@ -15,22 +15,25 @@ public class ProductRepository : Repository<Product>, IProductRepository
     }
 
 
-    public PagedList<Product> GetProducts(ProductsParameters productsParams)
+    public async Task<PagedList<Product>> GetProductsAsync(ProductsParameters productsParams)
     {
-        var products = GetAll().OrderBy(p => p.ProductId).AsQueryable();
-        var orderedProducts = PagedList<Product>.ToPagedList(products, productsParams.PageNumber, productsParams.PageSize);
-        return orderedProducts;
+        var products = await GetAllAsync();
+        var orderedProducts = products.OrderBy(p => p.ProductId).AsQueryable();
+        var result = PagedList<Product>.ToPagedList(orderedProducts, productsParams.PageNumber, productsParams.PageSize);
+        return result;
     }
 
 
-    public IEnumerable<Product> GetProductsByCategory(int id)
+    public async Task<IEnumerable<Product>> GetProductsByCategoryAsync(int id)
     {
-        return GetAll().Where(c => c.CategoryId == id);
+        var products = await GetAllAsync();
+        var productsCategory = products.Where(c => c.CategoryId == id);
+        return productsCategory;
     }
 
-    public PagedList<Product> GetProductsFilterPrice(ProductsFilterPrice productsFilterParams)
+    public async Task<PagedList<Product>> GetProductsFilterPriceAsync(ProductsFilterPrice productsFilterParams)
     {
-        var products = GetAll().AsQueryable();
+        var products = await GetAllAsync();
 
         if (productsFilterParams.Price.HasValue && !string.IsNullOrEmpty(productsFilterParams.PriceCriterion))
         {
@@ -47,7 +50,7 @@ public class ProductRepository : Repository<Product>, IProductRepository
                 products = products.Where(p => p.Price == productsFilterParams.Price.Value).OrderBy(p => p.Price);
             }
         }
-        var filteredProducts = PagedList<Product>.ToPagedList(products, productsFilterParams.PageNumber, productsFilterParams.PageSize);
+        var filteredProducts = PagedList<Product>.ToPagedList(products.AsQueryable(), productsFilterParams.PageNumber, productsFilterParams.PageSize);
 
         return filteredProducts;
     }

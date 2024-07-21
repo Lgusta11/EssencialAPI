@@ -22,12 +22,14 @@ namespace WebAPIUdemy.Controllers
         }
 
         [HttpGet("productsbycategory/{id}")]
-        public ActionResult<IEnumerable<ProductDTO>> GetProductByCategory(int id)
+        public async  Task<ActionResult<IEnumerable<ProductDTO>>> GetProductByCategory(int id)
         {
-            if (!_unitOfWork!.CategoryRepository.CategoryExists(id))
-                return NotFound("Categoria não encontrada");
+            bool categoryExists = await _unitOfWork!.CategoryRepository.CategoryExistsAsync(id);
 
-            var products = _unitOfWork.ProductRepository.GetProductsByCategory(id);
+            if (!categoryExists)
+             return NotFound("Categoria não encontrada");
+
+            var products = await _unitOfWork.ProductRepository.GetProductsByCategoryAsync(id);
 
             if (products == null || !products.Any())
                 return NotFound("Nenhum produto encontrado para esta categoria");
@@ -39,9 +41,9 @@ namespace WebAPIUdemy.Controllers
 
 
         [HttpGet("pagination")]
-        public ActionResult<IEnumerable<ProductDTO>> Get([FromQuery] ProductsParameters productsParameters)
+        public async Task<ActionResult<IEnumerable<ProductDTO>>> Get([FromQuery] ProductsParameters productsParameters)
         {
-            var products = _unitOfWork!.ProductRepository.GetProducts(productsParameters);
+            var products = await _unitOfWork!.ProductRepository.GetProductsAsync(productsParameters);
             if (products is null)
             {
                 return NotFound("Produtos não encontrados");
@@ -51,9 +53,9 @@ namespace WebAPIUdemy.Controllers
         }
 
         [HttpGet("filter/price/pagination")]
-        public ActionResult<IEnumerable<ProductDTO>> GetProductsPrice([FromQuery] ProductsFilterPrice productsFilterParameters)
+        public async Task<ActionResult<IEnumerable<ProductDTO>>> GetProductsPrice([FromQuery] ProductsFilterPrice productsFilterParameters)
         {
-            var products = _unitOfWork.ProductRepository.GetProductsFilterPrice(productsFilterParameters);
+            var products = await _unitOfWork.ProductRepository.GetProductsFilterPriceAsync(productsFilterParameters);
             if (products is null)
             {
                 return NotFound("Produtos não encontrados");
@@ -82,9 +84,9 @@ namespace WebAPIUdemy.Controllers
 
 
         [HttpGet]
-        public ActionResult<IEnumerable<ProductDTO>> Get()
+        public async Task<ActionResult<IEnumerable<ProductDTO>>> Get()
         {
-            var products = _unitOfWork!.ProductRepository.GetAll();
+            var products = await _unitOfWork!.ProductRepository.GetAllAsync();
             if (products is null)
             {
                 return NotFound("Produto não encontrado");
@@ -94,9 +96,9 @@ namespace WebAPIUdemy.Controllers
         }
 
         [HttpGet("{id:int:min(1)}", Name = "ObterProduto")]
-        public ActionResult<ProductDTO> Get(int id)
+        public async Task<ActionResult<ProductDTO>> Get(int id)
         {
-            var product = _unitOfWork!.ProductRepository.Get(p => p.ProductId == id);
+            var product = await _unitOfWork!.ProductRepository.GetAsync(p => p.ProductId == id);
             if (product is null)
             {
                 return NotFound("Produto não encontrado");
@@ -118,7 +120,7 @@ namespace WebAPIUdemy.Controllers
             var product = productDto.ToProduct();
 
             var productCreated = _unitOfWork!.ProductRepository.Create(product);
-            _unitOfWork.Commit();
+            _unitOfWork.CommitAsync();
 
             var newProductDto = productCreated!.ToProductDTO();
 
@@ -126,12 +128,12 @@ namespace WebAPIUdemy.Controllers
         }
 
         [HttpPatch("{id}/UpdatePartial")]
-        public ActionResult<ProductDTOUpdateResponse> Patch(int id, JsonPatchDocument<ProductDTOUpdateRequest> patchProductDTO)
+        public async Task<ActionResult<ProductDTOUpdateResponse>> Patch(int id, JsonPatchDocument<ProductDTOUpdateRequest> patchProductDTO)
         {
             if (patchProductDTO == null || id <= 0)
                 return BadRequest();
 
-            var product = _unitOfWork.ProductRepository.Get(p => p.ProductId == id);
+            var product = await _unitOfWork.ProductRepository.GetAsync(p => p.ProductId == id);
 
             if (product == null)
                 return NotFound();
@@ -147,7 +149,7 @@ namespace WebAPIUdemy.Controllers
             product.RegistrationDate = productUpdateRequest.RegistrationDate;
 
             _unitOfWork.ProductRepository.Update(product);
-            _unitOfWork.Commit();
+            _unitOfWork.CommitAsync();
 
             var productResponse = product.ToProductUpdateResponse();
             return Ok(productResponse);
@@ -164,7 +166,7 @@ namespace WebAPIUdemy.Controllers
             var product = productDto.ToProduct();
 
             var productsUpdated = _unitOfWork!.ProductRepository.Update(product);
-            _unitOfWork.Commit();
+            _unitOfWork.CommitAsync();
 
             var newUpdatedProductDto = productsUpdated!.ToProductDTO();
 
@@ -172,9 +174,9 @@ namespace WebAPIUdemy.Controllers
         }
 
         [HttpDelete("{id:int:min(1)}")]
-        public ActionResult<ProductDTO> Delete(int id)
+        public async Task<ActionResult<ProductDTO>> Delete(int id)
         {
-            var product = _unitOfWork!.ProductRepository.Get(p => p.ProductId == id);
+            var product = await _unitOfWork!.ProductRepository.GetAsync(p => p.ProductId == id);
 
             if (product is null)
             {
@@ -182,7 +184,7 @@ namespace WebAPIUdemy.Controllers
             }
 
             var productDelete = _unitOfWork!.ProductRepository.Delete(product);
-            _unitOfWork.Commit();
+            _unitOfWork.CommitAsync();
 
             var deletedProduct = productDelete!.ToProductDTO();
 

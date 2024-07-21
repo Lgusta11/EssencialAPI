@@ -24,9 +24,11 @@ namespace WebAPIUdemy.Controllers
 
         [HttpGet]
         [ServiceFilter(typeof(ApiLoggingFilter))]
-        public ActionResult<IEnumerable<CategoryDTO>> Get()
+        public async Task<ActionResult<IEnumerable<CategoryDTO>>> Get()
         {
-            var categories = _unitOfWork!.CategoryRepository.GetAll();
+            var categories = await _unitOfWork!.CategoryRepository.GetAllAsync();
+            if (categories is null)
+                return NotFound();
             var categoriesDto = categories.ToCategoryDtoList();
 
             return Ok(categoriesDto);
@@ -34,26 +36,26 @@ namespace WebAPIUdemy.Controllers
         }
 
         [HttpGet("pagination")]
-        public ActionResult<IEnumerable<CategoryDTO>> Get([FromQuery] CategoriesParameters categoriesParameters)
+        public async Task<ActionResult<IEnumerable<CategoryDTO>>> Get([FromQuery] CategoriesParameters categoriesParameters)
         {
-            var categories = _unitOfWork?.CategoryRepository.GetCategories(categoriesParameters);
+            var categories = await _unitOfWork?.CategoryRepository.GetCategoriesAsync(categoriesParameters);
 
             return GetCategories(categories);
         }
 
         [HttpGet("filter/name/pagination")]
-        public ActionResult<IEnumerable<CategoryDTO>> GetCategoriesFiltered([FromQuery] CategoriesFilterName categoriesFilter)
+        public async Task<ActionResult<IEnumerable<CategoryDTO>>> GetCategoriesFiltered([FromQuery] CategoriesFilterName categoriesFilter)
         {
-            var categoriesFiltered = _unitOfWork.CategoryRepository.GetCategoriesFilterName(categoriesFilter);
+            var categoriesFiltered = await _unitOfWork.CategoryRepository.GetCategoriesFilterNameAsync(categoriesFilter);
 
             return Ok(categoriesFiltered);
         }
 
         [HttpGet("{id:int:min(1)}", Name = "ObterCategoria")]
-        public ActionResult<CategoryDTO> Get(int id)
+        public async Task<ActionResult<CategoryDTO>> Get(int id)
         {
 
-            var category = _unitOfWork!.CategoryRepository.Get(c => c.CategoryId == id);
+            var category = await _unitOfWork!.CategoryRepository.GetAsync(c => c.CategoryId == id);
             if (category is null)
             {
                 return NotFound($"Categoria com id={id} não encontrada");
@@ -91,7 +93,7 @@ namespace WebAPIUdemy.Controllers
             var category = categoryDto.ToCartegory();
 
             var categoryCreated = _unitOfWork!.CategoryRepository.Create(category);
-            _unitOfWork.Commit();
+            _unitOfWork.CommitAsync();
 
             var newCategoryDto = categoryCreated!.ToCategoryDTO();
 
@@ -110,7 +112,7 @@ namespace WebAPIUdemy.Controllers
             var category = categoryDto.ToCartegory();
 
             var categoryUpdated = _unitOfWork!.CategoryRepository.Update(category!);
-            _unitOfWork.Commit();
+            _unitOfWork.CommitAsync();
 
             var newUpdatedCategoryDto = categoryUpdated!.ToCategoryDTO();
 
@@ -119,9 +121,9 @@ namespace WebAPIUdemy.Controllers
         }
 
         [HttpDelete("{id:int:min(1)}")]
-        public ActionResult<CategoryDTO> Delete(int id)
+        public async Task<ActionResult<CategoryDTO>> Delete(int id)
         {
-            var category = _unitOfWork!.CategoryRepository.Get(c => c.CategoryId == id);
+            var category = await _unitOfWork!.CategoryRepository.GetAsync(c => c.CategoryId == id);
 
             if (category is null)
             {
@@ -129,7 +131,7 @@ namespace WebAPIUdemy.Controllers
             }
 
             var categoryDelete = _unitOfWork.CategoryRepository.Delete(category);
-            _unitOfWork.Commit();
+            _unitOfWork.CommitAsync();
 
             var deletedCategory = categoryDelete!.ToCategoryDTO();
             return Ok(deletedCategory);
