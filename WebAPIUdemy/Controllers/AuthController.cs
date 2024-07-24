@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
@@ -26,7 +26,8 @@ public class AuthController : ControllerBase
         _config = config;
     }
 
-
+    [HttpPost]
+    [Route("login")]
     public async Task<IActionResult> Login([FromBody] LoginModel model)
     {
         var user = await _userManager.FindByNameAsync(model.UserName!);
@@ -68,8 +69,100 @@ public class AuthController : ControllerBase
             });
         }
         return Unauthorized();
-        }
     }
+
+    [HttpPost]
+    [Route("register")]
+    public async Task<IActionResult> Register([FromBody] RegisterModel model)
+    {
+        var userExists = await _userManager.FindByNameAsync(model.UserName!);
+
+        if (userExists != null)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError,
+                   new Response { Status = "Error", Message = "User already exists!" });
+        }
+        ApplicationUser user = new()
+        {
+            Email = model.Email,
+            SecurityStamp = Guid.NewGuid().ToString(),
+            UserName = model.UserName,
+        };
+
+        var result = await _userManager.CreateAsync(user, model.Password);
+
+        if (!result.Succeeded)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError,
+                  new Response { Status = "Error", Message = "User creation failed!" });
+        }
+
+        return Ok(new Response { Status = "Success", Message = "User created successfully!" });
+        }
+
+    [HttpPost]
+    [Route("refresh-token")]
+    public async Task<IActionResult> RefreshToken(TokenModel tokenModel)
+    {
+        if (tokenModel == null)
+        {
+            return BadRequest("Invalid client request");
+        }
+
+        string? accessToken = tokenModel.AcessToken 
+                              ?? throw new ArgumentNullException(nameof(tokenModel));
+
+        string? refreshToken = tokenModel.RefreshToken
+                               ?? throw new ArgumentNullException(nameof(tokenModel));
+
+        var principal = _tokenService.GetPrincipalFromExpiredToken(accessToken!, _config);
+
+        if (principal == null)
+            return BadRequest("Invalid access token/ refresh token");
+
+        string username = principal.Identity.Name;
+
+        var user = await _userManager.FindByNameAsync(username!);
+
+        if (user == null || user.RefreshToken != refreshToken 
+                         || user.RefreshTokenExpiryTime <= DateTime.Now)
+        {
+            return BadRequest("Invalid access token/ refresh token");
+        }
+
+        var newAccessToken = _tokenService.GenerateAcessToken(
+                                           principal.Claims.ToList(), _config);
+
+        var newRefreshToken = _tokenService.GenerateRefreshToken();
+
+        user.RefreshToken = newRefreshToken;
+        await _userManager.UpdateAsync(user);
+
+        return new ObjectResult(new
+        {
+            accessToken = new JwtSecurityTokenHandler().WriteToken(newAccessToken),
+            refreshToken = newRefreshToken
+        });
+    }
+
+    [Authorize]
+    [HttpPost]
+    [Route("revoke/{username}")]
+    public async Task<IActionResult> Revoke(string username)
+    {
+        var user = await _userManager.FindByNameAsync(username);
+
+        if (user == null) return BadRequest("Invalid user name");
+
+        user.RefreshToken = null;
+
+        await _userManager.UpdateAsync(user);
+
+        return NoContent();
+    }
+
+
+}
 
 
 
