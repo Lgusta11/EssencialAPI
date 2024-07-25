@@ -7,6 +7,7 @@ using WebAPIUdemy.Repositories;
 using System.Text.Json;
 using WebAPIUdemy.Pagination.Filters;
 using WebAPIUdemy.Model;
+using Microsoft.AspNetCore.Authorization;
 
 namespace WebAPIUdemy.Controllers
 {
@@ -84,6 +85,7 @@ namespace WebAPIUdemy.Controllers
 
 
         [HttpGet]
+        [Authorize(Policy = "UserOnly")]
         public async Task<ActionResult<IEnumerable<ProductDTO>>> Get()
         {
             var products = await _unitOfWork!.ProductRepository.GetAllAsync();

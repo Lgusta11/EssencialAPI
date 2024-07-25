@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 using WebAPIUdemy.DTOs;
 using WebAPIUdemy.DTOs.Mappings;
@@ -121,6 +122,7 @@ namespace WebAPIUdemy.Controllers
         }
 
         [HttpDelete("{id:int:min(1)}")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<ActionResult<CategoryDTO>> Delete(int id)
         {
             var category = await _unitOfWork!.CategoryRepository.GetAsync(c => c.CategoryId == id);

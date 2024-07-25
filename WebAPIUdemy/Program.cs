@@ -11,6 +11,8 @@ using WebAPIUdemy.Filters;
 using WebAPIUdemy.Logging;
 using WebAPIUdemy.Models;
 using WebAPIUdemy.Repositories;
+using WebAPIUdemy.Repositories.RoleRepositories;
+using WebAPIUdemy.Repositories.UserRepositories;
 using WebAPIUdemy.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -88,9 +90,28 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+
+    options.AddPolicy("SuperAdminOnly", policy =>
+                       policy.RequireRole("Admin").RequireClaim("id", "Gusta"));
+
+    options.AddPolicy("UserOnly", policy => policy.RequireRole("User"));
+
+    options.AddPolicy("ExclusiveOnly", policy =>
+                      policy.RequireAssertion(context =>
+                      context.User.HasClaim(claim =>
+                                           claim.Type == "id" && claim.Value == "Gusta")
+                                           || context.User.IsInRole("SuperAdmin")));
+});
+
+
 builder.Services.AddScoped<ApiLoggingFilter>();
 builder.Services.AddScoped<ICategoryRepository, CategoriesRepository>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<ITokenService, TokenService>();
