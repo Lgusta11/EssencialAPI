@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Text.Json;
 using WebAPIUdemy.DTOs;
 using WebAPIUdemy.DTOs.Mappings;
@@ -14,6 +15,7 @@ namespace WebAPIUdemy.Controllers
 {
     [Route("[controller]")]
     [ApiController]
+    [Authorize]
     public class CategoriesController : ControllerBase
     {
         private readonly IUnitOfWork? _unitOfWork;
@@ -84,6 +86,7 @@ namespace WebAPIUdemy.Controllers
             return Ok(categoriesDto);
         }
         [HttpPost]
+        [Authorize(Policy = "AdminOnly")]
         public ActionResult<CategoryDTO> Post(CategoryDTO categoryDto)
         {
             if (!ModelState.IsValid)
@@ -103,6 +106,7 @@ namespace WebAPIUdemy.Controllers
         }
 
         [HttpPut("{id:int:min(1)}")]
+        [Authorize(Policy = "AdminOnly")]
         public ActionResult<CategoryDTO> Put(CategoryDTO categoryDto, int id)
         {
             if (id != categoryDto.CategoryId)

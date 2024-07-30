@@ -13,6 +13,7 @@ namespace WebAPIUdemy.Controllers
 {
     [Route("[controller]")]
     [ApiController]
+    [Authorize]
     public class ProductsController : ControllerBase
     {
         private readonly IUnitOfWork? _unitOfWork;
@@ -112,6 +113,7 @@ namespace WebAPIUdemy.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = "AdminOnly")]
         public ActionResult<ProductDTO> Post(ProductDTO productDto)
         {
             if (!ModelState.IsValid)
@@ -130,6 +132,7 @@ namespace WebAPIUdemy.Controllers
         }
 
         [HttpPatch("{id}/UpdatePartial")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<ActionResult<ProductDTOUpdateResponse>> Patch(int id, JsonPatchDocument<ProductDTOUpdateRequest> patchProductDTO)
         {
             if (patchProductDTO == null || id <= 0)
@@ -158,6 +161,7 @@ namespace WebAPIUdemy.Controllers
         }
 
         [HttpPut("{id:int:min(1)}")]
+        [Authorize(Policy = "AdminOnly")]
         public ActionResult<ProductDTO> Put(ProductDTO productDto, int id)
         {
             if (id != productDto.ProductId)
@@ -176,6 +180,7 @@ namespace WebAPIUdemy.Controllers
         }
 
         [HttpDelete("{id:int:min(1)}")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<ActionResult<ProductDTO>> Delete(int id)
         {
             var product = await _unitOfWork!.ProductRepository.GetAsync(p => p.ProductId == id);

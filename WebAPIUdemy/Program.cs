@@ -17,6 +17,12 @@ using WebAPIUdemy.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Adiciona a leitura de User Secrets
+if (builder.Environment.IsDevelopment())
+{
+    builder.Configuration.AddUserSecrets<Program>();
+}
+
 builder.Services.AddControllers(options =>
 {
     options.Filters.Add(typeof(ApiExceptionFilter));
@@ -25,10 +31,21 @@ builder.Services.AddControllers(options =>
     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
 }).AddNewtonsoftJson();
 
+var OrigensComAcessoPermitido = "_origensComAcessoPermitido";
+
+builder.Services.AddCors(options =>
+    options.AddPolicy(name: OrigensComAcessoPermitido,
+    policy =>
+    {
+        policy.WithOrigins("http://www.apirequest.io")
+                                    .AllowAnyMethod()
+                                    .AllowAnyHeader();
+    }));
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "apicatalogo", Version = "v1" });
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "ApiCalogo", Version = "v1" });
 
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
     {
@@ -106,6 +123,15 @@ builder.Services.AddAuthorization(options =>
                                            || context.User.IsInRole("SuperAdmin")));
 });
 
+// builder.Services.AddRateLimiter(rateLimiterOptions =>
+// {
+//     rateLimiterOptions.AddFixedWindowLimiter("fixedwindow", options =>
+//     {
+//         options.PermitLimit = 1;
+//         options.Window = TimeSpan.FromSeconds(5);
+//         options.QueueLimit = 0;
+//     });
+// });
 
 builder.Services.AddScoped<ApiLoggingFilter>();
 builder.Services.AddScoped<ICategoryRepository, CategoriesRepository>();
@@ -131,6 +157,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
+app.UseRouting();
+
+// app.UseRateLimiter();
+
+app.UseCors(OrigensComAcessoPermitido);
 
 app.UseAuthentication();
 app.UseAuthorization();
