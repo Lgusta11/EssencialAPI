@@ -12,6 +12,7 @@ namespace WebAPIUdemy.Controllers;
 
 [Route("[controller]")]
 [ApiController]
+[ApiConventionType(typeof(DefaultApiConventions))]
 public class AuthController : ControllerBase
 {
     private readonly ITokenService _tokenService;
@@ -25,6 +26,20 @@ public class AuthController : ControllerBase
         _config = config;
     }
 
+    /// <summary>
+    /// Realiza o login de um usuário.
+    /// </summary>
+    /// <param name="model">Modelo contendo o nome de usuário e a senha.</param>
+    /// <returns>Um token JWT e um refresh token se o login for bem-sucedido; caso contrário, retorna não autorizado.</returns>
+    /// <remarks>
+    /// Exemplo de request:
+    /// 
+    /// POST /auth/login
+    /// {
+    ///     "userName": "usuario",
+    ///     "password": "senha"
+    /// }
+    /// </remarks>
     [HttpPost]
     [Route("login")]
     public async Task<IActionResult> Login([FromBody] LoginModel model)
@@ -72,6 +87,21 @@ public class AuthController : ControllerBase
         return Unauthorized();
     }
 
+    /// <summary>
+    /// Registra um novo usuário no sistema.
+    /// </summary>
+    /// <param name="model">Modelo contendo os dados do usuário.</param>
+    /// <returns>Status de sucesso ou erro.</returns>
+    /// <remarks>
+    /// Exemplo de request:
+    /// 
+    /// POST /auth/register
+    /// {
+    ///     "userName": "usuario",
+    ///     "email": "usuario@example.com",
+    ///     "password": "senha"
+    /// }
+    /// </remarks>
     [HttpPost]
     [Route("register")]
     public async Task<IActionResult> Register([FromBody] RegisterModel model)
@@ -102,6 +132,20 @@ public class AuthController : ControllerBase
         return Ok(new Response { Status = "Success", Message = "User created successfully!" });
     }
 
+    /// <summary>
+    /// Gera um novo token de acesso utilizando um refresh token válido.
+    /// </summary>
+    /// <param name="tokenModel">Modelo contendo o token de acesso e o refresh token.</param>
+    /// <returns>Um novo token de acesso e refresh token.</returns>
+    /// <remarks>
+    /// Exemplo de request:
+    /// 
+    /// POST /auth/refresh-token
+    /// {
+    ///     "accessToken": "tokenDeAcesso",
+    ///     "refreshToken": "tokenDeRefresh"
+    /// }
+    /// </remarks>
     [HttpPost]
     [Route("refresh-token")]
     public async Task<IActionResult> RefreshToken(TokenModel tokenModel)
@@ -148,6 +192,11 @@ public class AuthController : ControllerBase
         });
     }
 
+    /// <summary>
+    /// Revoga o refresh token de um usuário específico.
+    /// </summary>
+    /// <param name="username">Nome de usuário cujo refresh token será revogado.</param>
+    /// <returns>Status de sucesso ou erro.</returns>
     [HttpPost]
     [Route("revoke/{username}")]
     [Authorize(Policy = "ExclusiveOnly")]
@@ -165,6 +214,19 @@ public class AuthController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Cria um novo papel (role) no sistema.
+    /// </summary>
+    /// <param name="roleName">Nome do papel a ser criado.</param>
+    /// <returns>Status de sucesso ou erro.</returns>
+    /// <remarks>
+    /// Exemplo de request:
+    /// 
+    /// POST /auth/CreateRole
+    /// {
+    ///     "roleName": "Admin"
+    /// }
+    /// </remarks>
     [HttpPost]
     [Route("CreateRole")]
     [Authorize(Policy = "SuperAdminOnly")]
@@ -206,6 +268,21 @@ public class AuthController : ControllerBase
         });
     }
 
+    /// <summary>
+    /// Adiciona um usuário a um papel específico.
+    /// </summary>
+    /// <param name="email">Email do usuário a ser adicionado ao papel.</param>
+    /// <param name="roleName">Nome do papel ao qual o usuário será adicionado.</param>
+    /// <returns>Status de sucesso ou erro.</returns>
+    /// <remarks>
+    /// Exemplo de request:
+    /// 
+    /// POST /auth/AddUserToRole
+    /// {
+    ///     "email": "usuario@example.com",
+    ///     "roleName": "Admin"
+    /// }
+    /// </remarks>
     [HttpPost]
     [Route("AddUserToRole")]
     [Authorize(Policy = "SuperAdminOnly")]
@@ -213,32 +290,48 @@ public class AuthController : ControllerBase
     {
         var user = await _unitOfWork.UserRepository.FindByEmailAsync(email);
 
-        if (user != null)
+        if (user == null)
         {
-            var result = await _unitOfWork.UserRepository.AddToRoleAsync(user, roleName);
-            if (result.Succeeded)
+            return StatusCode(StatusCodes.Status400BadRequest,
+            new Response
             {
-                return StatusCode(StatusCodes.Status200OK,
-                  new Response
-                  {
-                      Status = "Success",
-                      Message = $"User {user.Email} added to the {roleName} role"
-                  });
-            }
-            else
-            {
-                return StatusCode(StatusCodes.Status400BadRequest,
-                  new Response
-                  {
-                      Status = "Error",
-                      Message = $"Unable to add user {user.Email} to the {roleName} role"
-                  });
-            }
+                Status = "Error",
+                Message = $"User does not exist."
+            });
         }
-        return BadRequest(
-            new
+
+        var roleExist = await _unitOfWork.RoleRepository.RoleExistsAsync(roleName);
+
+        if (!roleExist)
+        {
+            return StatusCode(StatusCodes.Status400BadRequest,
+            new Response
             {
-                error = "Unable to find user"
+                Status = "Error",
+                Message = $"Role does not exist."
+            });
+        }
+
+        var result = await _unitOfWork.UserRepository.AddToRoleAsync(user, roleName);
+
+        if (result.Succeeded)
+        {
+            await _unitOfWork.CommitAsync();
+            return StatusCode(StatusCodes.Status200OK,
+                new Response
+                {
+                    Status = "Success",
+                    Message = $"User {user.Email} added to {roleName}"
+                });
+        }
+
+        return StatusCode(StatusCodes.Status400BadRequest,
+            new Response
+            {
+                Status = "Error",
+                Message = $"Error occurred while adding user to role."
             });
     }
+
+   
 }

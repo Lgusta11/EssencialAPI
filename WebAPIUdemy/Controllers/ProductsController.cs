@@ -14,6 +14,7 @@ namespace WebAPIUdemy.Controllers
     [Route("[controller]")]
     [ApiController]
     [Authorize]
+    [ApiConventionType(typeof(DefaultApiConventions))]
     public class ProductsController : ControllerBase
     {
         private readonly IUnitOfWork? _unitOfWork;
@@ -23,13 +24,23 @@ namespace WebAPIUdemy.Controllers
             _unitOfWork = unitOfWork;
         }
 
+        /// <summary>
+        /// Retorna os produtos relacionados ao id da categoria.
+        /// </summary>
+        /// <param name="id">Id da categoria.</param>
+        /// <returns>Uma lista de produtos relacionados à categoria escolhida.</returns>
+        /// <remarks>
+        /// Exemplo de request:
+        /// 
+        /// GET /products/productsbycategory/{id}
+        /// </remarks>
         [HttpGet("productsbycategory/{id}")]
-        public async  Task<ActionResult<IEnumerable<ProductDTO>>> GetProductByCategory(int id)
+        public async Task<ActionResult<IEnumerable<ProductDTO>>> GetProductByCategory(int id)
         {
             bool categoryExists = await _unitOfWork!.CategoryRepository.CategoryExistsAsync(id);
 
             if (!categoryExists)
-             return NotFound("Categoria não encontrada");
+                return NotFound("Categoria não encontrada");
 
             var products = await _unitOfWork.ProductRepository.GetProductsByCategoryAsync(id);
 
@@ -41,7 +52,16 @@ namespace WebAPIUdemy.Controllers
             return Ok(productsDto);
         }
 
-
+        /// <summary>
+        /// Retorna uma lista paginada de produtos.
+        /// </summary>
+        /// <param name="productsParameters">Parâmetros de paginação.</param>
+        /// <returns>Uma lista paginada de produtos.</returns>
+        /// <remarks>
+        /// Exemplo de request:
+        /// 
+        /// GET /products/pagination?PageNumber=1&amp;PageSize=10
+        /// </remarks>
         [HttpGet("pagination")]
         public async Task<ActionResult<IEnumerable<ProductDTO>>> Get([FromQuery] ProductsParameters productsParameters)
         {
@@ -54,6 +74,16 @@ namespace WebAPIUdemy.Controllers
             return GetProducts(products);
         }
 
+        /// <summary>
+        /// Retorna uma lista paginada de produtos filtrados por preço.
+        /// </summary>
+        /// <param name="productsFilterParameters">Parâmetros de filtro por preço.</param>
+        /// <returns>Uma lista paginada de produtos filtrados por preço.</returns>
+        /// <remarks>
+        /// Exemplo de request:
+        /// 
+        /// GET /products/filter/price/pagination?MinPrice=10&amp;MaxPrice=100
+        /// </remarks>
         [HttpGet("filter/price/pagination")]
         public async Task<ActionResult<IEnumerable<ProductDTO>>> GetProductsPrice([FromQuery] ProductsFilterPrice productsFilterParameters)
         {
@@ -66,25 +96,16 @@ namespace WebAPIUdemy.Controllers
             return GetProducts(products);
         }
 
-        private ActionResult<IEnumerable<ProductDTO>> GetProducts(PagedList<Product>? products)
-        {
-            var metaData = new
-            {
-                products.TotalCount,
-                products.PageSize,
-                products.CurrentPage,
-                products.TotalPages,
-                products.HasNext,
-                products.HasPrevious
-            };
 
-            Response.Headers.Append("X-Pagination", JsonSerializer.Serialize(metaData));
-
-            var productsDto = products.ToProductDtoList();
-            return Ok(productsDto);
-        }
-
-
+        /// <summary>
+        /// Exibe todos os produtos.
+        /// </summary>
+        /// <returns>Retorna uma lista de produtos.</returns>
+        /// <remarks>
+        /// Exemplo de request:
+        /// 
+        /// GET /products
+        /// </remarks>
         [HttpGet]
         [Authorize(Policy = "UserOnly")]
         public async Task<ActionResult<IEnumerable<ProductDTO>>> Get()
@@ -98,6 +119,16 @@ namespace WebAPIUdemy.Controllers
             return Ok(productsDto);
         }
 
+        /// <summary>
+        /// Retorna um produto pelo seu Id.
+        /// </summary>
+        /// <param name="id">Id do produto.</param>
+        /// <returns>Objeto Produto.</returns>
+        /// <remarks>
+        /// Exemplo de request:
+        /// 
+        /// GET /products/{id}
+        /// </remarks>
         [HttpGet("{id:int:min(1)}", Name = "ObterProduto")]
         public async Task<ActionResult<ProductDTO>> Get(int id)
         {
@@ -109,9 +140,27 @@ namespace WebAPIUdemy.Controllers
 
             var productDto = product.ToProductDTO();
 
-            return Ok(product);
+            return Ok(productDto);
         }
 
+        /// <summary>
+        /// Inclui um novo produto.
+        /// </summary>
+        /// <param name="productDto">Objeto Produto.</param>
+        /// <returns>O objeto Produto incluído.</returns>
+        /// <remarks>
+        /// Exemplo de request:
+        /// 
+        /// POST /products
+        /// {
+        ///     "productId": 1,
+        ///     "name": "Produto Exemplo",
+        ///     "description": "Descrição do produto exemplo",
+        ///     "price": 99.99,
+        ///     "stock": 10,
+        ///     "categoryId": 1
+        /// }
+        /// </remarks>
         [HttpPost]
         [Authorize(Policy = "AdminOnly")]
         public ActionResult<ProductDTO> Post(ProductDTO productDto)
@@ -131,6 +180,21 @@ namespace WebAPIUdemy.Controllers
             return new CreatedAtRouteResult("ObterProduto", new { id = newProductDto!.ProductId }, newProductDto);
         }
 
+        /// <summary>
+        /// Atualiza parcialmente um produto existente.
+        /// </summary>
+        /// <param name="id">Id do produto.</param>
+        /// <param name="patchProductDTO">Documento de patch contendo as atualizações.</param>
+        /// <returns>O objeto Produto atualizado.</returns>
+        /// <remarks>
+        /// Exemplo de request:
+        /// 
+        /// PATCH /products/{id}/UpdatePartial
+        /// [
+        ///     { "op": "replace", "path": "/stock", "value": 20 },
+        ///     { "op": "replace", "path": "/registrationDate", "value": "2024-08-08T00:00:00Z" }
+        /// ]
+        /// </remarks>
         [HttpPatch("{id}/UpdatePartial")]
         [Authorize(Policy = "AdminOnly")]
         public async Task<ActionResult<ProductDTOUpdateResponse>> Patch(int id, JsonPatchDocument<ProductDTOUpdateRequest> patchProductDTO)
@@ -160,13 +224,32 @@ namespace WebAPIUdemy.Controllers
             return Ok(productResponse);
         }
 
+        /// <summary>
+        /// Atualiza um produto existente.
+        /// </summary>
+        /// <param name="productDto">Objeto Produto com os novos dados.</param>
+        /// <param name="id">Id do produto a ser atualizado.</param>
+        /// <returns>O objeto Produto atualizado.</returns>
+        /// <remarks>
+        /// Exemplo de request:
+        /// 
+        /// PUT /products/{id}
+        /// {
+        ///     "productId": 1,
+        ///     "name": "Produto Atualizado",
+        ///     "description": "Descrição atualizada do produto",
+        ///     "price": 199.99,
+        ///     "stock": 5,
+        ///     "categoryId": 1
+        /// }
+        /// </remarks>
         [HttpPut("{id:int:min(1)}")]
         [Authorize(Policy = "AdminOnly")]
         public ActionResult<ProductDTO> Put(ProductDTO productDto, int id)
         {
             if (id != productDto.ProductId)
             {
-                return BadRequest("Informe um id valido");
+                return BadRequest("Informe um id válido");
             }
 
             var product = productDto.ToProduct();
@@ -179,6 +262,16 @@ namespace WebAPIUdemy.Controllers
             return Ok(newUpdatedProductDto);
         }
 
+        /// <summary>
+        /// Exclui um produto existente.
+        /// </summary>
+        /// <param name="id">Id do produto a ser excluído.</param>
+        /// <returns>O objeto Produto excluído.</returns>
+        /// <remarks>
+        /// Exemplo de request:
+        /// 
+        /// DELETE /products/{id}
+        /// </remarks>
         [HttpDelete("{id:int:min(1)}")]
         [Authorize(Policy = "AdminOnly")]
         public async Task<ActionResult<ProductDTO>> Delete(int id)
@@ -195,7 +288,24 @@ namespace WebAPIUdemy.Controllers
 
             var deletedProduct = productDelete!.ToProductDTO();
 
-            return Ok(productDelete);
+            return Ok(deletedProduct);
+        }
+        private ActionResult<IEnumerable<ProductDTO>> GetProducts(PagedList<Product>? products)
+        {
+            var metaData = new
+            {
+                products.TotalCount,
+                products.PageSize,
+                products.CurrentPage,
+                products.TotalPages,
+                products.HasNext,
+                products.HasPrevious
+            };
+
+            Response.Headers.Append("X-Pagination", JsonSerializer.Serialize(metaData));
+
+            var productsDto = products.ToProductDtoList();
+            return Ok(productsDto);
         }
     }
 }
