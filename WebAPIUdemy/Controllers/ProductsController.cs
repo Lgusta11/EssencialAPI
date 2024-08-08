@@ -107,7 +107,6 @@ namespace WebAPIUdemy.Controllers
         /// GET /products
         /// </remarks>
         [HttpGet]
-        [Authorize(Policy = "UserOnly")]
         public async Task<ActionResult<IEnumerable<ProductDTO>>> Get()
         {
             var products = await _unitOfWork!.ProductRepository.GetAllAsync();

@@ -19,7 +19,6 @@ using WebAPIUdemy.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Adiciona a leitura de User Secrets
 if (builder.Environment.IsDevelopment())
 {
     builder.Configuration.AddUserSecrets<Program>();
