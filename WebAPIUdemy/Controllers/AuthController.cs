@@ -26,20 +26,6 @@ public class AuthController : ControllerBase
         _config = config;
     }
 
-    /// <summary>
-    /// Realiza o login de um usuário.
-    /// </summary>
-    /// <param name="model">Modelo contendo o nome de usuário e a senha.</param>
-    /// <returns>Um token JWT e um refresh token se o login for bem-sucedido; caso contrário, retorna não autorizado.</returns>
-    /// <remarks>
-    /// Exemplo de request:
-    /// 
-    /// POST /auth/login
-    /// {
-    ///     "userName": "usuario",
-    ///     "password": "senha"
-    /// }
-    /// </remarks>
     [HttpPost]
     [Route("login")]
     public async Task<IActionResult> Login([FromBody] LoginModel model)
@@ -87,21 +73,7 @@ public class AuthController : ControllerBase
         return Unauthorized();
     }
 
-    /// <summary>
-    /// Registra um novo usuário no sistema.
-    /// </summary>
-    /// <param name="model">Modelo contendo os dados do usuário.</param>
-    /// <returns>Status de sucesso ou erro.</returns>
-    /// <remarks>
-    /// Exemplo de request:
-    /// 
-    /// POST /auth/register
-    /// {
-    ///     "userName": "usuario",
-    ///     "email": "usuario@example.com",
-    ///     "password": "senha"
-    /// }
-    /// </remarks>
+    
     [HttpPost]
     [Route("register")]
     public async Task<IActionResult> Register([FromBody] RegisterModel model)
@@ -132,20 +104,7 @@ public class AuthController : ControllerBase
         return Ok(new Response { Status = "Success", Message = "User created successfully!" });
     }
 
-    /// <summary>
-    /// Gera um novo token de acesso utilizando um refresh token válido.
-    /// </summary>
-    /// <param name="tokenModel">Modelo contendo o token de acesso e o refresh token.</param>
-    /// <returns>Um novo token de acesso e refresh token.</returns>
-    /// <remarks>
-    /// Exemplo de request:
-    /// 
-    /// POST /auth/refresh-token
-    /// {
-    ///     "accessToken": "tokenDeAcesso",
-    ///     "refreshToken": "tokenDeRefresh"
-    /// }
-    /// </remarks>
+    
     [HttpPost]
     [Route("refresh-token")]
     public async Task<IActionResult> RefreshToken(TokenModel tokenModel)
@@ -192,11 +151,7 @@ public class AuthController : ControllerBase
         });
     }
 
-    /// <summary>
-    /// Revoga o refresh token de um usuário específico.
-    /// </summary>
-    /// <param name="username">Nome de usuário cujo refresh token será revogado.</param>
-    /// <returns>Status de sucesso ou erro.</returns>
+    
     [HttpPost]
     [Route("revoke/{username}")]
     [Authorize(Policy = "ExclusiveOnly")]
@@ -214,19 +169,7 @@ public class AuthController : ControllerBase
         return NoContent();
     }
 
-    /// <summary>
-    /// Cria um novo papel (role) no sistema.
-    /// </summary>
-    /// <param name="roleName">Nome do papel a ser criado.</param>
-    /// <returns>Status de sucesso ou erro.</returns>
-    /// <remarks>
-    /// Exemplo de request:
-    /// 
-    /// POST /auth/CreateRole
-    /// {
-    ///     "roleName": "Admin"
-    /// }
-    /// </remarks>
+   
     [HttpPost]
     [Route("CreateRole")]
     [Authorize(Policy = "SuperAdminOnly")]
@@ -268,21 +211,7 @@ public class AuthController : ControllerBase
         });
     }
 
-    /// <summary>
-    /// Adiciona um usuário a um papel específico.
-    /// </summary>
-    /// <param name="email">Email do usuário a ser adicionado ao papel.</param>
-    /// <param name="roleName">Nome do papel ao qual o usuário será adicionado.</param>
-    /// <returns>Status de sucesso ou erro.</returns>
-    /// <remarks>
-    /// Exemplo de request:
-    /// 
-    /// POST /auth/AddUserToRole
-    /// {
-    ///     "email": "usuario@example.com",
-    ///     "roleName": "Admin"
-    /// }
-    /// </remarks>
+    
     [HttpPost]
     [Route("AddUserToRole")]
     [Authorize(Policy = "SuperAdminOnly")]

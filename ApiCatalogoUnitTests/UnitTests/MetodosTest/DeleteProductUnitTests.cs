@@ -16,14 +16,14 @@ namespace ApiCatalogoUnitTests.UnitTests.MetodosTest
             _controller = new ProductsController(fixture.repository);
         }
 
-        [Fact]
-        public async Task DeleteProductById_Return_OkResult()
-        {
-        }
+        //[Fact]
+        //public async Task DeleteProductById_Return_OkResult()
+        //{
+        //}
 
-        [Fact]
-        public async Task DeleteProductById_Return_NotFound()
-        {
-        }
+        //[Fact]
+        //public async Task DeleteProductById_Return_NotFound()
+        //{
+        //}
     }
 }

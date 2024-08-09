@@ -131,6 +131,11 @@ namespace WebAPIUdemy.Controllers
         [HttpGet("{id:int:min(1)}", Name = "ObterProduto")]
         public async Task<ActionResult<ProductDTO>> Get(int id)
         {
+
+            if (id == null || id <= 0)
+            {
+                return BadRequest("ID de produto invalido");
+            }
             var product = await _unitOfWork!.ProductRepository.GetAsync(p => p.ProductId == id);
             if (product is null)
             {
@@ -142,24 +147,7 @@ namespace WebAPIUdemy.Controllers
             return Ok(productDto);
         }
 
-        /// <summary>
-        /// Inclui um novo produto.
-        /// </summary>
-        /// <param name="productDto">Objeto Produto.</param>
-        /// <returns>O objeto Produto incluído.</returns>
-        /// <remarks>
-        /// Exemplo de request:
-        /// 
-        /// POST /products
-        /// {
-        ///     "productId": 1,
-        ///     "name": "Produto Exemplo",
-        ///     "description": "Descrição do produto exemplo",
-        ///     "price": 99.99,
-        ///     "stock": 10,
-        ///     "categoryId": 1
-        /// }
-        /// </remarks>
+
         [HttpPost]
         [Authorize(Policy = "AdminOnly")]
         public ActionResult<ProductDTO> Post(ProductDTO productDto)
@@ -171,6 +159,7 @@ namespace WebAPIUdemy.Controllers
 
             var product = productDto.ToProduct();
 
+
             var productCreated = _unitOfWork!.ProductRepository.Create(product);
             _unitOfWork.CommitAsync();
 
@@ -179,21 +168,7 @@ namespace WebAPIUdemy.Controllers
             return new CreatedAtRouteResult("ObterProduto", new { id = newProductDto!.ProductId }, newProductDto);
         }
 
-        /// <summary>
-        /// Atualiza parcialmente um produto existente.
-        /// </summary>
-        /// <param name="id">Id do produto.</param>
-        /// <param name="patchProductDTO">Documento de patch contendo as atualizações.</param>
-        /// <returns>O objeto Produto atualizado.</returns>
-        /// <remarks>
-        /// Exemplo de request:
-        /// 
-        /// PATCH /products/{id}/UpdatePartial
-        /// [
-        ///     { "op": "replace", "path": "/stock", "value": 20 },
-        ///     { "op": "replace", "path": "/registrationDate", "value": "2024-08-08T00:00:00Z" }
-        /// ]
-        /// </remarks>
+  
         [HttpPatch("{id}/UpdatePartial")]
         [Authorize(Policy = "AdminOnly")]
         public async Task<ActionResult<ProductDTOUpdateResponse>> Patch(int id, JsonPatchDocument<ProductDTOUpdateRequest> patchProductDTO)
@@ -223,25 +198,7 @@ namespace WebAPIUdemy.Controllers
             return Ok(productResponse);
         }
 
-        /// <summary>
-        /// Atualiza um produto existente.
-        /// </summary>
-        /// <param name="productDto">Objeto Produto com os novos dados.</param>
-        /// <param name="id">Id do produto a ser atualizado.</param>
-        /// <returns>O objeto Produto atualizado.</returns>
-        /// <remarks>
-        /// Exemplo de request:
-        /// 
-        /// PUT /products/{id}
-        /// {
-        ///     "productId": 1,
-        ///     "name": "Produto Atualizado",
-        ///     "description": "Descrição atualizada do produto",
-        ///     "price": 199.99,
-        ///     "stock": 5,
-        ///     "categoryId": 1
-        /// }
-        /// </remarks>
+
         [HttpPut("{id:int:min(1)}")]
         [Authorize(Policy = "AdminOnly")]
         public ActionResult<ProductDTO> Put(ProductDTO productDto, int id)
@@ -261,16 +218,7 @@ namespace WebAPIUdemy.Controllers
             return Ok(newUpdatedProductDto);
         }
 
-        /// <summary>
-        /// Exclui um produto existente.
-        /// </summary>
-        /// <param name="id">Id do produto a ser excluído.</param>
-        /// <returns>O objeto Produto excluído.</returns>
-        /// <remarks>
-        /// Exemplo de request:
-        /// 
-        /// DELETE /products/{id}
-        /// </remarks>
+
         [HttpDelete("{id:int:min(1)}")]
         [Authorize(Policy = "AdminOnly")]
         public async Task<ActionResult<ProductDTO>> Delete(int id)
