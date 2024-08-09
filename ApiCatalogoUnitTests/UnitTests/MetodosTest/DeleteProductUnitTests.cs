@@ -1,4 +1,6 @@
-﻿using System;
+﻿using FluentAssertions;
+using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -16,14 +18,26 @@ namespace ApiCatalogoUnitTests.UnitTests.MetodosTest
             _controller = new ProductsController(fixture.repository);
         }
 
-        //[Fact]
-        //public async Task DeleteProductById_Return_OkResult()
-        //{
-        //}
+        [Fact]
+        public async Task DeleteProductById_Return_OkResult()
+        {
+            var prodId = 2;
 
-        //[Fact]
-        //public async Task DeleteProductById_Return_NotFound()
-        //{
-        //}
+            var result = await _controller.Delete(prodId);
+
+            result.Should().NotBeNull();
+            result.Result.Should().BeOfType<OkObjectResult>();
+        }
+
+        [Fact]
+        public async Task DeleteProductById_Return_NotFound()
+        {
+            var prodId = 999;
+
+            var result = await _controller.Delete(prodId);
+
+            result.Should().NotBeNull();
+            result.Result.Should().BeOfType<NotFoundObjectResult>();
+        }
     }
 }
