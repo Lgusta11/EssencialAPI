@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json.Serialization;
 using WebAPIUdemy.Context;
+using WebAPIUdemy.DTOs.AuthDTO;
 using WebAPIUdemy.Extensions;
 using WebAPIUdemy.Filters;
 using WebAPIUdemy.Logging;
@@ -207,6 +208,7 @@ app.UseRouting();
 app.UseCors(OrigensComAcessoPermitido);
 
 app.UseAuthentication();
+app.UseMiddleware<UnauthorizedResponseMiddleware>();
 app.UseAuthorization();
 
 app.MapControllers();
